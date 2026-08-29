@@ -17,7 +17,9 @@ provenance, cross-market consistency audit, and small-sample forecast scores.
 ## Data and model boundary
 
 - Five separate binary Yes prices are normalized by their sum to form each
-  meeting marginal. Raw sums and quote-quality diagnostics remain visible.
+  meeting marginal. A discount factor common to every same-meeting outcome
+  cancels in this normalization; raw sums and quote-quality diagnostics remain
+  visible for non-common carry and trading frictions.
 - Meeting actions map to representative −50/−25/0/+25/+50 bp changes and are
   accumulated from the official target-range upper bound.
 - The separately traded year-end target-rate distribution is retained as an
@@ -25,7 +27,9 @@ provenance, cross-market consistency audit, and small-sample forecast scores.
   shown as disagreement, not an additional Fed move.
 - The conditional tree uses a meeting-only persistence kernel followed by
   iterative proportional fitting. Its transitions are modeled; the meeting
-  marginals are quoted. The year-end market never constrains the action path.
+  marginals are quoted. All finite action paths are enumerated exactly rather
+  than sampled. No historical transition fit is active, and the year-end
+  market never constrains the action path.
 - Historical daily marks are reconstructed and labeled. Contemporary
   snapshots are archived four times per day. The realized target path is
   added afterward for comparison.

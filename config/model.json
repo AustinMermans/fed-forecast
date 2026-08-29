@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "model": "structural_persistence_terminal_ipf",
+  "model": "structural_meeting_persistence_ipf",
   "active_historical_fit": false,
   "action_representatives_bp": [-50, -25, 0, 25, 50],
   "dependence_strength": 0.35,

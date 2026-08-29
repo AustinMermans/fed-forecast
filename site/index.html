@@ -97,7 +97,7 @@
         <div><b>Quoted</b><p>A valid CLOB midpoint is preferred; a contemporaneous Gamma price is a labeled fallback. Five Yes prices are normalized to 100%.</p></div>
         <div><b>Archived</b><p>Each frame uses only observations available by that timestamp. No contract appears before its first quote; held or reconstructed observations are labeled.</p></div>
         <div><b>Translated</b><p>Open-ended tails use ±50 bp for path arithmetic. The chart shows the upper bound of the target range, not EFFR or a fee-adjusted break-even.</p></div>
-        <div><b>Modeled</b><p>The fan preserves quoted meeting marginals with iterative proportional fitting. Cross-meeting dependence is structural. Historical reconstruction regimes are versioned and identified in the replay.</p></div>
+        <div><b>Modeled</b><p>All 5<sup>N</sup> action paths are enumerated exactly and raked back to quoted meeting marginals. Cross-meeting persistence is assumed, not historically estimated.</p></div>
       </div>
       <p class="disclosure">An explanatory research monitor, not a trading recommendation or a full calibration study. Prices omit fees, spread, slippage, and settlement risk. Historical API reconstructions are distinguishable from contemporaneously archived observations. <a href="methodology.html">Read the full methodology and small-sample results →</a></p>
     </section>

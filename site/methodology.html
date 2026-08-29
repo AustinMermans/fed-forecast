@@ -36,6 +36,7 @@
         <p>Because separate Yes prices need not add to exactly one dollar, we use multiplicative normalization—also called proportional de-vigging:</p>
         <div class="formula"><span>p<sub>i</sub> = q<sub>i</sub> / Σq</span><small>q = observed Yes price · p = displayed meeting probability</small></div>
         <p>The raw sum, source, maximum spread, timestamp, liquidity, and any fallback remain visible. This convention is transparent, but it is not the only possible de-vigging rule and it does not remove fees, slippage, or settlement risk.</p>
+        <p><b>What about the risk-free rate?</b> A Yes token is a prepaid claim that pays $1 if its outcome wins, so its raw dollar price can contain funding and carry effects. But all five contracts for one meeting share approximately the same horizon. If every price has the same discount factor, q<sub>i</sub> = D(T)π<sub>i</sub>, proportional normalization cancels it exactly: q<sub>i</sub>/Σq = π<sub>i</sub>. We therefore do not add a separate Treasury-rate correction to the base probabilities. Unequal resolution timing, risk premia, trading frictions, or venue incentives can break that cancellation. Polymarket also documents <a href="https://docs.polymarket.com/concepts/positions-tokens">variable holding rewards</a> for eligible positions and <a href="https://docs.polymarket.com/trading/fees">market-specific taker fees</a>, so raw-price carry is not a simple Treasury discount calculation.</p>
         <div class="worked" id="worked-example">Loading the current market example…</div>
       </div>
     </section>
@@ -58,12 +59,16 @@
         <p class="chart-kicker">WHAT IS MODELED</p>
         <h2>Marginals do not identify a path</h2>
         <p>Meeting markets tell us the probability of each action at each date, but not questions such as “if September hikes, what happens to October?” The current tree starts with an assumed persistence kernel: similar policy stances receive more joint weight, and that influence decays with meeting distance. No constraint pulls those discrete paths toward the separately traded year-end rate distribution.</p>
+        <div class="formula"><span>w(a<sub>1:N</sub>) ∝ ∏<sub>t</sub>p<sub>t</sub>(a<sub>t</sub>) · exp{λΣ<sub>i&lt;j</sub>ρ<sup>j−i−1</sup>s(a<sub>i</sub>)s(a<sub>j</sub>)}</span><small>Initial joint weight · λ = persistence strength · ρ = distance decay</small></div>
         <p>Iterative proportional fitting then adjusts the joint weights until every quoted meeting marginal is recovered. This guarantees meeting-marginal consistency; it does not make the conditional transitions observed or uniquely identified.</p>
+        <p>This is exact enumeration, not Monte Carlo simulation. With N five-outcome meetings, the model evaluates all 5<sup>N</sup> complete action paths—625 paths for the current four-meeting horizon—then obtains branch probabilities by conditioning that joint distribution on the selected history.</p>
+        <div class="formula"><span>P(a<sub>t+1</sub> | h<sub>t</sub>) = Σw(paths extending h<sub>t</sub>,a<sub>t+1</sub>) / Σw(paths extending h<sub>t</sub>)</span><small>Each click conditions on the entire realized history; all later distributions update</small></div>
         <div class="model-cards">
           <div><span>OBSERVED</span><b>Meeting marginals</b><p>Normalized from quoted action contracts.</p></div>
           <div><span>ASSUMED</span><b>Persistence kernel</b><p>A scenario parameter, not a historically estimated coefficient.</p></div>
           <div><span>ENFORCED</span><b>Meeting-marginal recovery by IPF</b><p>The joint distribution returns to every meeting input.</p></div>
         </div>
+        <p>The live adjustment rule is <b>not yet learned from historical post-event reactions</b>. A historical-transition diagnostic exists in the research pipeline, but it is not activated without a validated and adequately identified fit. The fan therefore answers “what follows under this persistence assumption?” rather than “what history proves will follow.”</p>
         <p>The fan computes quantiles across complete meeting-action paths. A selected orange branch is always jointly realizable on the modeled −50/−25/0/+25/+50 bp lattice. The connected cyan medians are pointwise quantiles and need not themselves form one realized path.</p>
       </div>
     </section>

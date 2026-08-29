@@ -23,10 +23,15 @@ class ProductionSiteTests(unittest.TestCase):
 
     def test_public_methodology_separates_quotes_model_and_evidence(self) -> None:
         html = (ROOT / "site/methodology.html").read_text(encoding="utf-8")
-        for phrase in ("Five binary contracts", "Marginals do not identify a path", "SMALL-SAMPLE EVIDENCE", "Unit of observation"):
+        for phrase in ("Five binary contracts", "Marginals do not identify a path", "exact enumeration", "not yet learned from historical", "risk-free rate", "SMALL-SAMPLE EVIDENCE", "Unit of observation"):
             self.assertIn(phrase, html)
         self.assertNotIn("PRODUCT_SPEC", html)
         self.assertNotIn("IMPLEMENTATION_PLAN", html)
+
+    def test_model_config_names_meeting_only_structure(self) -> None:
+        model = json.loads((ROOT / "config/model.json").read_text(encoding="utf-8"))
+        self.assertEqual(model["model"], "structural_meeting_persistence_ipf")
+        self.assertFalse(model["active_historical_fit"])
 
     def test_every_current_meeting_has_five_normalized_prices_and_quality(self) -> None:
         for meeting in self.dashboard["policy"]["meetings"]:
