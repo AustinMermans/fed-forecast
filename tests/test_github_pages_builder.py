@@ -22,12 +22,14 @@ class ForecastReplayTests(unittest.TestCase):
                 "nodes": [{
                     "node_id": "root", "depth": 0, "realized_path": [], "path_probability": 1.0,
                     "representative_target_upper": 4.0, "action_implied_target_upper": 5.25,
+                    "rate_distribution": [{"rate": 3.75, "probability": 0.4}, {"rate": 4.25, "probability": 0.6}],
                     "next_meeting_date": None, "next_probabilities": None, "branches": [],
                 }],
             },
         })
         self.assertEqual(compact["nodes"][0]["rate"], 4.0)
         self.assertEqual(compact["nodes"][0]["action_rate"], 5.25)
+        self.assertEqual(compact["nodes"][0]["rate_distribution"][1]["rate"], 4.25)
 
     def test_legacy_tree_reconstructs_terminal_action_before_anchor_reset(self) -> None:
         policy = {
@@ -63,7 +65,7 @@ class ForecastReplayTests(unittest.TestCase):
     def test_forward_chart_uses_quarter_point_scrolling_grid(self) -> None:
         dashboard = (SCRIPT.parents[1] / "site" / "assets" / "dashboard.js").read_text(encoding="utf-8")
         self.assertIn("const AXIS_TICK_PP = .25;", dashboard)
-        self.assertIn("const AXIS_VIEW_SPAN_PP = 3.25;", dashboard)
+        self.assertIn("const AXIS_VIEW_SPAN_PP = 2.25;", dashboard)
         self.assertIn("value += AXIS_TICK_PP", dashboard)
         self.assertIn("prepareAxisCenters(state.index);", dashboard)
 

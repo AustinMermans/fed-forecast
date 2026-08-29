@@ -73,8 +73,6 @@ def _thaw(value: object) -> object:
 class FedPathSnapshot:
     schema_version: int
     config_sha256: str
-    source_image: str
-    source_sha256: str
     target_upper_bound: float
     effective_rate_baseline: float
     standard_move_bp: float
@@ -105,8 +103,6 @@ class FedPathSnapshot:
         return {
             "schema_version": self.schema_version,
             "config_sha256": self.config_sha256,
-            "source_image": self.source_image,
-            "source_sha256": self.source_sha256,
             "target_upper_bound": self.target_upper_bound,
             "effective_rate_baseline": self.effective_rate_baseline,
             "standard_move_bp": self.standard_move_bp,
@@ -129,8 +125,6 @@ class FedPathSnapshot:
 class _SnapshotBuilder:
     schema_version: int
     config_sha256: str
-    source_image: str
-    source_sha256: str
     target_upper_bound: float
     effective_rate_baseline: float
     standard_move_bp: float
@@ -149,7 +143,7 @@ class _SnapshotBuilder:
 
     def freeze(self) -> FedPathSnapshot:
         return FedPathSnapshot(
-            self.schema_version, self.config_sha256, self.source_image, self.source_sha256,
+            self.schema_version, self.config_sha256,
             self.target_upper_bound, self.effective_rate_baseline, self.standard_move_bp,
             self.max_spread, self.fetched_at, self.gamma_api_base, self.clob_api_base,
             self.events, tuple(self.raw_responses), self.midpoints, self.books,
@@ -358,7 +352,7 @@ class FedPathClient:
         return PriceObservation(source_id, market.question, market.title, market.yes_token, gamma, "gamma", "degraded", self._utc_now(), market.liquidity_num, bid, ask, spread)
 
     def _new_snapshot(self, config: FedPathConfig) -> _SnapshotBuilder:
-        return _SnapshotBuilder(1, _config_digest(config), config.source_image, config.source_sha256, config.target_upper_bound, config.effective_rate_baseline, config.standard_move_bp, config.max_spread, self._utc_now(), self.GAMMA_API_BASE, self.CLOB_API_BASE)
+        return _SnapshotBuilder(2, _config_digest(config), config.target_upper_bound, config.effective_rate_baseline, config.standard_move_bp, config.max_spread, self._utc_now(), self.GAMMA_API_BASE, self.CLOB_API_BASE)
 
     def _utc_now(self) -> str:
         return self.now().astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -408,6 +402,7 @@ def _timestamp(value: object, name: str) -> str:
 def load_fed_path_snapshot(path: Path, config: FedPathConfig, *, transport: Transport | None = None, project_root: Path | None = None) -> FedPathSnapshot:
     """Load only portable standard JSON, revalidate identity, and never use HTTP."""
     del transport  # Explicitly prove this API cannot route replay through a transport.
+    del project_root  # Retained for callers that used the schema-1 API.
     try:
         raw = json.loads(
             Path(path).read_text(encoding="utf-8"),
@@ -418,19 +413,15 @@ def load_fed_path_snapshot(path: Path, config: FedPathConfig, *, transport: Tran
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as error:
         raise SnapshotReplayError(f"snapshot is not strict standard JSON: {error}") from error
     payload = _exact(raw, _SNAPSHOT_KEYS, "snapshot")
-    identity = (payload["config_sha256"], payload["source_image"], payload["source_sha256"], payload["target_upper_bound"], payload["effective_rate_baseline"], payload["standard_move_bp"], payload["max_spread"])
-    expected = (_config_digest(config), config.source_image, config.source_sha256, config.target_upper_bound, config.effective_rate_baseline, config.standard_move_bp, config.max_spread)
+    identity = (payload["config_sha256"], payload["target_upper_bound"], payload["effective_rate_baseline"], payload["standard_move_bp"], payload["max_spread"])
+    expected = (_config_digest(config), config.target_upper_bound, config.effective_rate_baseline, config.standard_move_bp, config.max_spread)
     if identity != expected:
         raise SnapshotReplayError("snapshot identity does not match the active configuration")
-    if isinstance(payload["schema_version"], bool) or payload["schema_version"] != 1:
+    if isinstance(payload["schema_version"], bool) or payload["schema_version"] != 2:
         raise SnapshotReplayError("snapshot metadata is invalid")
     _timestamp(payload["fetched_at"], "fetched_at")
     if payload["gamma_api_base"] != FedPathClient.GAMMA_API_BASE or payload["clob_api_base"] != FedPathClient.CLOB_API_BASE:
         raise SnapshotReplayError("snapshot API bases do not match the pinned public endpoints")
-    root = Path(project_root) if project_root is not None else Path(__file__).resolve().parents[2]
-    image = (root / config.source_image).resolve()
-    if root.resolve() not in image.parents or not image.is_file() or hashlib.sha256(image.read_bytes()).hexdigest() != config.source_sha256:
-        raise SnapshotReplayError("active reference image identity does not match configuration")
     for name in ("events", "midpoints", "books", "terminal_prices"):
         if not isinstance(payload[name], dict) or any(not isinstance(key, str) for key in payload[name]):
             raise SnapshotReplayError(f"snapshot {name} is invalid")
@@ -473,7 +464,7 @@ def load_fed_path_snapshot(path: Path, config: FedPathConfig, *, transport: Tran
         if not isinstance(row["severity"], str) or row["source_id"] is not None and not isinstance(row["source_id"], str) or not isinstance(row["code"], str) or not isinstance(row["message"], str):
             raise SnapshotReplayError("diagnostic is invalid")
         diagnostics.append(Diagnostic(**row))  # type: ignore[arg-type]
-    snapshot = FedPathSnapshot(1, payload["config_sha256"], payload["source_image"], payload["source_sha256"], _finite_number(payload["target_upper_bound"], "target upper baseline"), _finite_number(payload["effective_rate_baseline"], "effective baseline"), _finite_number(payload["standard_move_bp"], "standard move"), _finite_number(payload["max_spread"], "maximum spread"), payload["fetched_at"], payload["gamma_api_base"], payload["clob_api_base"], payload["events"], payload["raw_responses"], payload["midpoints"], payload["books"], prices, tuple(meetings), terminal, diagnostics)  # type: ignore[arg-type]
+    snapshot = FedPathSnapshot(2, payload["config_sha256"], _finite_number(payload["target_upper_bound"], "target upper baseline"), _finite_number(payload["effective_rate_baseline"], "effective baseline"), _finite_number(payload["standard_move_bp"], "standard move"), _finite_number(payload["max_spread"], "maximum spread"), payload["fetched_at"], payload["gamma_api_base"], payload["clob_api_base"], payload["events"], payload["raw_responses"], payload["midpoints"], payload["books"], prices, tuple(meetings), terminal, diagnostics)  # type: ignore[arg-type]
     _validate_replayed_topology(snapshot, config)
     return snapshot
 
@@ -481,7 +472,7 @@ def load_fed_path_snapshot(path: Path, config: FedPathConfig, *, transport: Tran
 def _validate_replayed_topology(snapshot: FedPathSnapshot, config: FedPathConfig) -> None:
     expected_meetings = {(meeting.date, outcome.label) for meeting in config.meetings for outcome in meeting.outcomes}
     actual_meetings = {(item.meeting_date, item.label) for item in snapshot.meeting_prices}
-    if len(snapshot.meeting_prices) != 15 or actual_meetings != expected_meetings:
+    if len(snapshot.meeting_prices) != len(expected_meetings) or actual_meetings != expected_meetings:
         raise SnapshotReplayError("meeting replay topology does not match configuration")
     if set(snapshot.terminal_prices) != {item.label for item in config.terminal_buckets}:
         raise SnapshotReplayError("terminal replay topology does not match configuration")

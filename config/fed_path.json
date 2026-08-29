@@ -1,8 +1,5 @@
 {
-  "schema_version": 1,
-  "pricing_date": "2026-07-24",
-  "source_image": "docs/source/wirp-fed-funds-2026-07-24.jpg",
-  "source_sha256": "4c298af9537ae26c22917d6f3f48eb9fd5ed2654be9ce17499b9b218d2397d34",
+  "schema_version": 2,
   "target_upper_bound": 3.75,
   "effective_rate_baseline": 3.628,
   "standard_move_bp": 25.0,
@@ -61,18 +58,5 @@
       {"label": "4.25%", "kind": "exact", "representative_rate": 4.25},
       {"label": "≥4.5%", "kind": "gte", "representative_rate": 4.5}
     ]
-  },
-  "wirp_rows": [
-    {"date": "2026-07-29", "incremental_moves": 0.337, "cumulative_moves": 0.337, "implied_rate_delta": 0.084, "implied_rate": 3.713},
-    {"date": "2026-09-16", "incremental_moves": 0.71, "cumulative_moves": 1.047, "implied_rate_delta": 0.262, "implied_rate": 3.89},
-    {"date": "2026-10-28", "incremental_moves": 0.27, "cumulative_moves": 1.317, "implied_rate_delta": 0.329, "implied_rate": 3.958},
-    {"date": "2026-12-09", "incremental_moves": 0.385, "cumulative_moves": 1.701, "implied_rate_delta": 0.425, "implied_rate": 4.054},
-    {"date": "2027-01-27", "incremental_moves": 0.185, "cumulative_moves": 1.887, "implied_rate_delta": 0.472, "implied_rate": 4.1},
-    {"date": "2027-03-17", "incremental_moves": 0.243, "cumulative_moves": 2.13, "implied_rate_delta": 0.532, "implied_rate": 4.161},
-    {"date": "2027-04-28", "incremental_moves": 0.107, "cumulative_moves": 2.237, "implied_rate_delta": 0.559, "implied_rate": 4.188},
-    {"date": "2027-06-09", "incremental_moves": -0.002, "cumulative_moves": 2.234, "implied_rate_delta": 0.559, "implied_rate": 4.187},
-    {"date": "2027-07-28", "incremental_moves": -0.058, "cumulative_moves": 2.177, "implied_rate_delta": 0.544, "implied_rate": 4.173},
-    {"date": "2027-09-15", "incremental_moves": -0.125, "cumulative_moves": 2.052, "implied_rate_delta": 0.513, "implied_rate": 4.141},
-    {"date": "2027-10-27", "incremental_moves": -0.085, "cumulative_moves": 1.967, "implied_rate_delta": 0.492, "implied_rate": 4.12}
-  ]
+  }
 }

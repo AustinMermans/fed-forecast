@@ -20,8 +20,11 @@ def _load(path: Path) -> dict[str, object]:
 def validate(site: Path) -> None:
     required = (
         site / "index.html",
+        site / "methodology.html",
         site / "assets" / "styles.css",
         site / "assets" / "dashboard.js",
+        site / "assets" / "methodology.js",
+        site / "assets" / "methodology.css",
         site / "data" / "dashboard.json",
         site / "data" / "forecast-replay.json",
     )
@@ -55,6 +58,18 @@ def validate(site: Path) -> None:
         slug = meeting.get("event_slug")
         if not isinstance(slug, str) or not str(urls.get(slug, "")).startswith("https://polymarket.com/event/"):
             raise ValueError(f"{meeting.get('date')} has no direct market link")
+    terminal = policy.get("terminal_anchor")
+    if not isinstance(terminal, dict) or not isinstance(terminal.get("quote_quality"), dict):
+        raise ValueError("year-end rate market quality is missing")
+    tree = policy.get("tree")
+    if not isinstance(tree, dict) or not isinstance(tree.get("nodes"), list):
+        raise ValueError("current conditional tree is missing")
+    for node in tree["nodes"]:
+        distribution = node.get("rate_distribution") if isinstance(node, dict) else None
+        if not isinstance(distribution, list) or not distribution:
+            raise ValueError("conditional node rate distribution is missing")
+        if not math.isclose(sum(float(item["probability"]) for item in distribution), 1.0, abs_tol=1e-9):
+            raise ValueError("conditional node rate distribution does not sum to one")
 
     vintages = replay.get("vintages")
     if not isinstance(vintages, list) or len(vintages) < 30:

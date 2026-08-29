@@ -4,7 +4,7 @@ const NS = "http://www.w3.org/2000/svg";
 const DAY_MS = 86_400_000;
 const DEFAULT_REPLAY_WINDOW_DAYS = 183;
 const AXIS_TICK_PP = .25;
-const AXIS_VIEW_SPAN_PP = 3.25;
+const AXIS_VIEW_SPAN_PP = 2.25;
 const AXIS_PADDING_PP = .125;
 const AXIS_MAX_SHIFT_PER_DAY_PP = .05;
 const AXIS_CAMERA_MAX_PP_PER_SECOND = .26;
@@ -187,12 +187,11 @@ function renderHeader(vintage) {
   const hold = firstPrices["No change"] || 0;
   const cut = (firstPrices["50+ bps decrease"] || 0) + (firstPrices["25 bps decrease"] || 0);
   const hike = (firstPrices["25 bps increase"] || 0) + (firstPrices["50+ bps increase"] || 0);
-  const directional = hike >= cut ? [hike, "hike"] : [cut, "cut"];
   $("selected-time").textContent = isHistorical
     ? `${calendarDate(item.generated_at)} · DAILY RECONSTRUCTED MARK`
     : `${timestamp(item.generated_at)} · ${isLatest ? "LATEST ARCHIVED SNAPSHOT" : isEvent ? "EVENT CHECKPOINT" : "FORECAST VINTAGE"}`;
   $("selected-label").textContent = isLatest && firstMeeting
-    ? `${month(firstMeeting.date)}: ${pct(hold)} hold, ${pct(directional[0])} ${directional[1]}`
+    ? `${month(firstMeeting.date)}: ${pct(cut)} lower · ${pct(hold)} unchanged · ${pct(hike)} higher`
     : isEvent
       ? `${item.label}: the forward cone reprices`
       : isHistorical
@@ -348,7 +347,7 @@ function renderMeetingTable(vintage) {
   const historicalMapping = vintage.kind === "historical_daily" || vintage.meetings.some(meeting => Array.isArray(meeting.native_outcomes));
   $("market-note").textContent = historicalMapping
     ? "Historical contracts retain their native labels in each cell tooltip. The fixed five-column view is a canonical display mapping; open-ended 25+ outcomes are not evidence of an exact 25 bp move."
-    : "Normalized Yes prices. Activity and quote-quality metadata are stamped when observed.";
+    : "Five separate Yes/No contracts form each event. We divide each Yes price by their sum to create one distribution; activity and quote-quality metadata are stamped when observed.";
   $("meeting-table").innerHTML = vintage.meetings.map(meeting => {
     const values = pricesByKey(meeting);
     const nativeLabels = Array.isArray(meeting.native_outcomes) ? meeting.native_outcomes.map(item => item.label).join(" · ") : null;
@@ -398,6 +397,27 @@ function renderChange(vintage) {
     const left = change >= 0 ? 50 : 50 - width;
     return `<div class="change-row"><span>${bucket.label}</span><div class="diverge"><i style="left:${left}%;width:${width}%;--bucket:${bucket.color}"></i></div><strong>${pp(change)}</strong></div>`;
   }).join("");
+}
+
+function renderCoherence(visible) {
+  $("coherence").hidden = !visible;
+  $("coherence").style.display = visible ? "" : "none";
+  if (!visible) return;
+  const policy = state.dashboard.policy;
+  const terminal = policy.terminal_anchor;
+  const terminalDate = terminal.date;
+  const actionRate = policy.meetings
+    .filter(meeting => meeting.date <= terminalDate)
+    .reduce((level, meeting) => level + meeting.expected_change_bp / 100, policy.target_upper_bound_baseline);
+  const terminalRate = terminal.expected_target_upper;
+  const gap = 100 * (terminalRate - actionRate);
+  const quality = terminal.quote_quality || {};
+  const activity = terminal.activity || {};
+  $("coherence").innerHTML = `
+    <div><span>MEETING-ACTION PATH</span><strong>${rate(actionRate)}</strong><small>Cumulative expected meeting moves through ${month(terminalDate)}</small></div>
+    <div><span>YEAR-END RATE MARKET</span><strong>${rate(terminalRate)}</strong><small>Independent 15-bucket target-rate distribution</small></div>
+    <div class="${Math.abs(gap) >= 12.5 ? "coherence-alert" : ""}"><span>CROSS-MARKET GAP</span><strong>${bp(gap)}</strong><small>Shown as disagreement—not a Fed action</small></div>
+    <div><span>YEAR-END MARKET QUALITY</span><strong>${Number.isFinite(terminal.raw_total) ? `${(100 * terminal.raw_total).toFixed(1)}¢` : "—"}</strong><small>ΣYes · ${Number.isFinite(quality.max_spread) ? `${(100 * quality.max_spread).toFixed(1)}¢ max spread` : "spread unavailable"}${Number.isFinite(activity.liquidity) ? ` · ${money(activity.liquidity)} liquidity` : ""}</small></div>`;
 }
 
 function weightedQuantile(points, q) {
@@ -483,7 +503,16 @@ function fanRowsForPath(tree, meetings, nodes, prefix) {
     } else {
       candidates = tree.nodes.filter(node => node.depth === depth && prefix.every((value, index) => node.path[index] === value));
     }
-    const points = candidates.map(node => ({ rate: node.rate, weight: node.probability, node }));
+    const points = candidates.flatMap(node => {
+      const distribution = Array.isArray(node.rate_distribution) && node.rate_distribution.length
+        ? node.rate_distribution
+        : [{ rate: node.rate, probability: 1 }];
+      return distribution.map(point => ({
+        rate: point.rate,
+        weight: node.probability * point.probability,
+        node,
+      }));
+    });
     return { depth, q05: weightedQuantile(points, .05), q25: weightedQuantile(points, .25), q50: weightedQuantile(points, .5), q75: weightedQuantile(points, .75), q95: weightedQuantile(points, .95) };
   });
 }
@@ -643,10 +672,11 @@ function drawFan(tree, meetings, nodes, animateFromPath = null) {
 
 function renderSelectedState() {
   const vintage = state.vintages[state.position];
+  const atLatest = state.position === state.index.length - 1;
   renderHeader(vintage);
   renderMeetingTable(vintage);
   renderChange(vintage);
-  const atLatest = state.position === state.index.length - 1;
+  renderCoherence(atLatest);
   renderTree(atLatest
     ? { policy: state.dashboard.policy, label: "current full-market forecast" }
     : { policy: { tree: null }, label: "historical forecast vintage" });

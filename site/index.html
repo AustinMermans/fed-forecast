@@ -17,7 +17,7 @@
   <a class="skip-link" href="#main">Skip to forecast replay</a>
   <header class="topbar">
     <a class="wordmark" href="#replay" aria-label="Fed Forecast home"><span>FF</span> FED FORECAST</a>
-    <nav aria-label="Sections"><a href="#replay">Replay</a><a href="#path">Scenarios</a><a href="#method">Method</a></nav>
+    <nav aria-label="Sections"><a href="#replay">Replay</a><a href="#snapshot">Markets</a><a href="#path">Scenarios</a><a href="methodology.html">Methodology</a></nav>
     <div class="status" id="freshness"><i></i>Loading markets…</div>
   </header>
 
@@ -54,7 +54,7 @@
       <div class="chart-shell forward-shell">
         <svg id="forward-chart" role="img" aria-labelledby="forward-svg-title forward-desc">
           <title id="forward-svg-title">Forward Federal funds target-range distribution</title>
-          <desc id="forward-desc">Market-implied probability bands, median forecast, subsequently realized target path, FOMC dates, and a quarter-percentage-point scrolling rate grid.</desc>
+          <desc id="forward-desc">Model-derived probability bands constrained to market marginals, the pointwise median, subsequently realized target path, FOMC dates, and a quarter-percentage-point scrolling rate grid.</desc>
         </svg>
         <div class="chart-tooltip" id="tooltip" role="tooltip"></div>
       </div>
@@ -68,7 +68,7 @@
       <div class="market-surface" id="snapshot">
         <div class="block-head">
           <div><p class="chart-kicker">CONTRACTS UNDER THE FORECAST</p><h2>Five outcomes at each meeting</h2></div>
-          <div><p id="market-note">Normalized Yes prices. Activity is event-level and stamped when observed.</p><div class="meeting-tabs" id="meeting-tabs" role="group" aria-label="Select policy meeting"></div></div>
+          <div><p id="market-note">Each event contains five separate Yes/No contracts. Their normalized Yes prices form one meeting distribution.</p><div class="meeting-tabs" id="meeting-tabs" role="group" aria-label="Select policy meeting"></div></div>
         </div>
         <div class="snapshot-grid">
           <div class="table-wrap">
@@ -77,6 +77,7 @@
           <aside class="change-panel"><p class="chart-kicker">REPRICING</p><h2 id="change-title">Versus prior observation</h2><p class="change-sub" id="change-sub"></p><div id="change-bars" class="change-bars"></div><p class="unit-note"><strong>Probability points, not basis points.</strong> A move from 30% to 42% is +12 pp.</p></aside>
         </div>
       </div>
+      <div class="coherence" id="coherence" aria-label="Comparison of meeting-action and year-end rate markets"></div>
     </section>
 
     <section class="path" id="path">
@@ -87,7 +88,7 @@
         <aside class="branch-panel"><p id="branch-step" class="branch-step"></p><h3 id="branch-meeting">—</h3><p id="branch-path" class="branch-path"></p><div id="branch-buttons" class="branch-buttons"></div><button id="branch-back" class="back" type="button">← Undo last outcome</button></aside>
         <div class="fan-block"><div class="fan-caption"><span>Target upper bound</span><span id="fan-caption">Weighted path distribution</span></div><svg id="fan-chart" role="img" aria-label="Conditional target-rate fan through Federal Reserve meetings"></svg></div>
       </div>
-      <div class="path-method"><b>Where the model begins</b><p>Every branch is a discrete −50, −25, 0, +25, or +50 bp representative action. At the December terminal date, the solid orange path first shows that meeting action; a dashed vertical bridge then reconciles it with the separately traded year-end rate distribution. The joint tree preserves all quoted meeting and terminal marginals, then adds persistence across meetings. That dependence is an assumption, not another traded price.</p></div>
+      <div class="path-method"><b>Where the model begins</b><p>Every branch is a discrete −50, −25, 0, +25, or +50 bp representative action. At the December terminal date, the solid orange path shows that meeting action; the dashed vertical gap then compares it with the separately traded year-end rate distribution. It is cross-market disagreement, not an additional Fed move. The joint tree preserves all quoted marginals and adds assumed persistence across meetings.</p></div>
     </section>
 
     <section class="method" id="method">
@@ -98,11 +99,11 @@
         <div><b>Translated</b><p>Open-ended tails use ±50 bp for path arithmetic. The chart shows the upper bound of the target range, not EFFR or a fee-adjusted break-even.</p></div>
         <div><b>Modeled</b><p>The fan preserves quoted marginals with iterative proportional fitting. Cross-meeting dependence is structural. Historical meeting-only and current terminal-anchored regimes are versioned and identified in the replay.</p></div>
       </div>
-      <p class="disclosure">An explanatory research monitor, not a trading recommendation or a full calibration study. Prices omit fees, spread, slippage, and settlement risk. Historical API reconstructions are distinguishable from contemporaneously archived observations. Source links and machine-readable current data are provided below.</p>
+      <p class="disclosure">An explanatory research monitor, not a trading recommendation or a full calibration study. Prices omit fees, spread, slippage, and settlement risk. Historical API reconstructions are distinguishable from contemporaneously archived observations. <a href="methodology.html">Read the full methodology and small-sample results →</a></p>
     </section>
   </main>
 
-  <footer><span>FED FORECAST / PUBLIC ARCHIVE</span><span id="footer-time">—</span><span class="footer-links"><a href="data/dashboard.json">Data ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a><a href="https://github.com/AustinMermans/fed-forecast/blob/main/config/model.json">Model ↗</a><a href="https://github.com/AustinMermans/fed-forecast/blob/main/NOTICE.md">Notice ↗</a></span></footer>
-  <script src="assets/dashboard.js?v=terminal-anchor-bridge-1" defer></script>
+  <footer><span>FED FORECAST / PUBLIC ARCHIVE</span><span id="footer-time">—</span><span class="footer-links"><a href="methodology.html">Methodology ↗</a><a href="data/dashboard.json">Data ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a><a href="https://github.com/AustinMermans/fed-forecast/blob/main/NOTICE.md">Notice ↗</a></span></footer>
+  <script src="assets/dashboard.js?v=conditional-pmf-1" defer></script>
 </body>
 </html>

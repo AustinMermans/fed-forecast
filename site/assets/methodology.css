@@ -1,0 +1,6 @@
+.method-copy { min-width: 0; }
+
+@media (max-width: 720px) {
+  .method-section { grid-template-columns: minmax(0, 1fr); }
+  .method-flow { flex-wrap: wrap; overflow-x: visible; white-space: normal; }
+}

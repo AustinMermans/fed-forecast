@@ -13,8 +13,16 @@ Federal Reserve Bank of New York.
   Reserve. The latest effective Federal funds rate and target range come from
   the New York Fed's public reference-rates endpoint.
 - Open-ended meeting buckets are represented as ±50 basis points only for
-  computing a displayed path. Prediction-market prices exclude fees, spread,
+computing a displayed path. Prediction-market prices exclude fees, spread,
   slippage, and contract-specific settlement risk.
+
+Primary public endpoints and documentation:
+
+- [Polymarket developer documentation](https://docs.polymarket.com/)
+- [Polymarket Gamma API](https://gamma-api.polymarket.com/)
+- [Polymarket CLOB API](https://clob.polymarket.com/)
+- [Federal Reserve FOMC calendars and information](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm)
+- [New York Fed reference rates](https://markets.newyorkfed.org/read?productCode=50&eventCodes=500&startDt=&endDt=&sort=postDt:-1,eventCode:1&format=csv)
 
 The MIT license applies to this repository's code. It does not relicense or
 grant rights in third-party data, market wording, trademarks, or source media.

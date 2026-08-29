@@ -17,7 +17,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from .daily_fed_path import fetch_latest_effr_payload, parse_latest_effr
+from .effr import fetch_latest_effr_payload, parse_latest_effr
 from .fed_path import compute_meeting_distribution
 from .fed_path_client import FedPathClient
 from .fed_path_config import load_fed_path_config

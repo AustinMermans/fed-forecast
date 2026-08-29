@@ -143,6 +143,40 @@ class MeetingScenarioTests(unittest.TestCase):
             january_fourth_hike["action_implied_target_upper"],
             january_fourth_hike["representative_target_upper"],
         )
+        root_terminal = result["terminal_anchor"]["probabilities"]
+        december_nodes = [item for item in tree["nodes"] if item["depth"] == 3]
+        recovered_terminal = {
+            label: sum(
+                float(node["path_probability"]) * float(node["rate_distribution"][index]["probability"])
+                for node in december_nodes
+            )
+            for index, label in enumerate(root_terminal)
+        }
+        for label, probability in root_terminal.items():
+            self.assertAlmostEqual(recovered_terminal[label], probability)
+        self.assertGreater(len(december_hold["rate_distribution"]), 1)
+        terminal_rates = {
+            bucket.label: bucket.representative_rate for bucket in self.config.terminal_buckets
+        }
+        quoted_points = sorted(
+            (terminal_rates[label], probability) for label, probability in root_terminal.items()
+        )
+        tree_points = sorted(
+            (float(point["rate"]), float(node["path_probability"]) * float(point["probability"]))
+            for node in december_nodes for point in node["rate_distribution"]
+        )
+
+        def quantile(points, level):
+            total = sum(weight for _, weight in points)
+            cumulative = 0.0
+            for value, weight in points:
+                cumulative += weight / total
+                if cumulative >= level - 1e-12:
+                    return value
+            return points[-1][0]
+
+        for level in (.05, .5, .95):
+            self.assertEqual(quantile(tree_points, level), quantile(quoted_points, level))
 
     def test_payload_is_finite_and_svg_has_all_bars_and_next_meeting_scenarios(self) -> None:
         result = self.result()

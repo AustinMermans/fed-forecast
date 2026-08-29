@@ -10,6 +10,26 @@ dependence between meetings inspectable through a conditional path explorer.
 Quoted meeting probabilities are data; conditional repricing is a structural
 model and is labeled accordingly.
 
+Read the public [methodology and results note](https://austinmermans.github.io/fed-forecast/methodology.html)
+for the probability transformation, rate translation, joint model, replay
+provenance, cross-market consistency audit, and small-sample forecast scores.
+
+## Data and model boundary
+
+- Five separate binary Yes prices are normalized by their sum to form each
+  meeting marginal. Raw sums and quote-quality diagnostics remain visible.
+- Meeting actions map to representative −50/−25/0/+25/+50 bp changes and are
+  accumulated from the official target-range upper bound.
+- The separately traded year-end target-rate distribution is retained as an
+  independent market view. Any difference from cumulative meeting actions is
+  shown as disagreement, not an additional Fed move.
+- The conditional tree uses a persistence and terminal-consistency kernel,
+  followed by iterative proportional fitting. Its transitions are modeled;
+  the input marginals are quoted.
+- Historical daily marks are reconstructed and labeled. Contemporary
+  snapshots are archived four times per day. The realized target path is
+  added afterward for comparison.
+
 ## Run locally
 
 ```sh
@@ -30,5 +50,15 @@ Collection is fail-closed: malformed or incomplete market topology never
 replaces the last valid public snapshot. GitHub Actions refreshes the site four
 times per day and deploys the static `site/` directory to GitHub Pages.
 
-See [the product specification](docs/PRODUCT_SPEC.md),
-[implementation plan](docs/IMPLEMENTATION_PLAN.md), and [data notice](NOTICE.md).
+## Repository map
+
+- `config/` — current market topology, model settings, and official decisions
+- `src/fed_forecast/` — collection, validation, probability, and joint-model code
+- `scripts/` — static-site builder and public-bundle validation
+- `data/` — reconstructed historical replay inputs
+- `outputs/` — immutable verified run archive used by the builder
+- `site/` — deployable GitHub Pages application and compact public data
+- `tests/` — model, replay, parser, and publication invariants
+
+The archive is explanatory research, not a trading recommendation or proof of
+calibration. See the [data and attribution notice](NOTICE.md).

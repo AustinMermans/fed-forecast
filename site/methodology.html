@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a0d0f">
+  <meta name="description" content="Methods, assumptions, and small-sample forecast evidence behind Fed Forecast.">
+  <title>Methodology · Fed Forecast</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/methodology.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to methodology</a>
+  <header class="topbar">
+    <a class="wordmark" href="index.html" aria-label="Fed Forecast home"><span>FF</span> FED FORECAST</a>
+    <nav aria-label="Sections"><a href="index.html#replay">Replay</a><a href="index.html#snapshot">Markets</a><a href="#results">Results</a><a href="#model">Model</a></nav>
+    <div class="status"><i></i>METHOD NOTE / LIVE DATA</div>
+  </header>
+
+  <main id="main" class="methodology-page">
+    <section class="method-hero">
+      <p class="timestamp">METHODOLOGY / EVIDENCE / LIMITS</p>
+      <h1>From contract prices to a Fed path</h1>
+      <p class="method-deck">The market supplies meeting-by-meeting marginals. Everything that connects those meetings is a model. This note separates the two, shows the arithmetic, and reports what a small historical replay can—and cannot—establish.</p>
+      <div class="method-flow" aria-label="Forecast construction flow">
+        <span>YES PRICES</span><i>→</i><span>MEETING MARGINALS</span><i>→</i><span>ACTION LEVELS</span><i>→</i><span>JOINT MODEL</span><i>→</i><span>RATE FAN</span>
+      </div>
+    </section>
+
+    <section class="method-section" id="prices">
+      <div class="method-number">01</div>
+      <div class="method-copy">
+        <p class="chart-kicker">WHAT IS OBSERVED</p>
+        <h2>Five binary contracts become one meeting distribution</h2>
+        <p>A Polymarket meeting event is not a single five-way security. It contains five separate Yes/No contracts: at least a 50 bp cut, a 25 bp cut, no change, a 25 bp hike, and at least a 50 bp hike. We prefer a valid CLOB midpoint and use the contemporaneous Gamma Yes price only when the book fails the quality gate.</p>
+        <p>Because separate Yes prices need not add to exactly one dollar, we use multiplicative normalization—also called proportional de-vigging:</p>
+        <div class="formula"><span>p<sub>i</sub> = q<sub>i</sub> / Σq</span><small>q = observed Yes price · p = displayed meeting probability</small></div>
+        <p>The raw sum, source, maximum spread, timestamp, liquidity, and any fallback remain visible. This convention is transparent, but it is not the only possible de-vigging rule and it does not remove fees, slippage, or settlement risk.</p>
+        <div class="worked" id="worked-example">Loading the current market example…</div>
+      </div>
+    </section>
+
+    <section class="method-section" id="translation">
+      <div class="method-number">02</div>
+      <div class="method-copy">
+        <p class="chart-kicker">PRICE TO POLICY RATE</p>
+        <h2>Actions are incremental; rate levels are cumulative</h2>
+        <p>Each meeting probability is attached to a representative action of −50, −25, 0, +25, or +50 basis points. The two open-ended tails are capped at ±50 bp for arithmetic. The expected action is the probability-weighted average. Adding those actions to the current target-range upper bound produces the meeting-action path.</p>
+        <div class="formula"><span>E[Δr<sub>t</sub>] = Σ p<sub>i,t</sub>a<sub>i</sub></span><small>Expected incremental action at meeting t</small></div>
+        <div class="formula"><span>E[r<sub>T</sub>] = r<sub>0</sub> + Σ<sub>t≤T</sub>E[Δr<sub>t</sub>]</span><small>Cumulative meeting-action level through T</small></div>
+        <p>The chart targets the upper bound of the Federal funds target range, not EFFR. The current upper bound and EFFR are sourced from the New York Fed; the baseline spread is not assumed constant when the official target changes.</p>
+      </div>
+    </section>
+
+    <section class="method-section" id="model">
+      <div class="method-number">03</div>
+      <div class="method-copy">
+        <p class="chart-kicker">WHAT IS MODELED</p>
+        <h2>Marginals do not identify a path</h2>
+        <p>Meeting markets tell us the probability of each action at each date, but not questions such as “if September hikes, what happens to October?” The current tree starts with an assumed persistence kernel: similar policy stances receive more joint weight, and that influence decays with meeting distance. A second soft constraint favors paths closer to the separately traded year-end rate distribution.</p>
+        <p>Iterative proportional fitting then adjusts the joint weights until every quoted meeting marginal and every year-end rate bucket is recovered. This guarantees marginal consistency; it does not make the conditional transitions observed or uniquely identified.</p>
+        <div class="model-cards">
+          <div><span>OBSERVED</span><b>Meeting and year-end marginals</b><p>Normalized from quoted contracts.</p></div>
+          <div><span>ASSUMED</span><b>Persistence and terminal-consistency kernels</b><p>Scenario parameters, not historically estimated coefficients.</p></div>
+          <div><span>ENFORCED</span><b>Marginal recovery by IPF</b><p>The joint distribution returns to every input marginal.</p></div>
+        </div>
+        <p>The fan now computes quantiles from the full conditional terminal-rate distribution at each branch. It does not substitute branch-level conditional means for rate outcomes. Connected medians are pointwise quantiles, not necessarily one jointly realizable path.</p>
+      </div>
+    </section>
+
+    <section class="method-section" id="cross-market">
+      <div class="method-number">04</div>
+      <div class="method-copy">
+        <p class="chart-kicker">TWO MARKET VIEWS</p>
+        <h2>The December action market and year-end rate market can disagree</h2>
+        <p>The cumulative meeting-action path and the 15-bucket year-end rate distribution are independently traded. Preserving both does not make their levels economically identical. The site displays their difference as a cross-market gap—not as an extra Fed move between the December meeting and year-end.</p>
+        <div class="coherence method-coherence" id="method-coherence"></div>
+        <p>A stricter future version could reconcile the two subject to bid/ask and liquidity-weighted uncertainty. Today’s version keeps both quotes intact so that disagreement remains visible rather than silently moving either market.</p>
+      </div>
+    </section>
+
+    <section class="method-section" id="results">
+      <div class="method-number">05</div>
+      <div class="method-copy">
+        <p class="chart-kicker">SMALL-SAMPLE EVIDENCE</p>
+        <h2>Forecasts sharpen near meetings; calibration is not yet established</h2>
+        <p id="sample-summary">Loading resolved-meeting evidence…</p>
+        <div class="score-chart" id="score-chart" aria-label="Forecast scores by days before meeting"></div>
+        <div class="table-wrap results-wrap">
+          <table class="results-table"><thead><tr><th>Forecast horizon</th><th>Resolved meetings</th><th>Probability on outcome</th><th>Multiclass Brier</th><th>Log loss</th></tr></thead><tbody id="results-body"></tbody></table>
+        </div>
+        <p class="results-note"><b>Unit of observation:</b> one resolved FOMC meeting. Daily marks of the same meeting are not independent events. Scores use the last archived vintage available on or before each fixed horizon. Lower Brier and log loss are better; probability on outcome is descriptive, not a calibration test.</p>
+        <div class="result-verdict"><span>WHAT THE ARCHIVE SUPPORTS</span><p>In this small reconstructed sample, probability assigned to the realized outcome generally increased as meetings approached.</p><span>WHAT IT DOES NOT SUPPORT</span><p>A conclusion that Polymarket is globally well calibrated, has proven superior resolution, or outperforms Fed funds futures.</p></div>
+      </div>
+    </section>
+
+    <section class="method-section" id="archive">
+      <div class="method-number">06</div>
+      <div class="method-copy">
+        <p class="chart-kicker">REPLAY PROVENANCE</p>
+        <h2>Each frame is an information set, not hindsight</h2>
+        <p>Historical frames are reconstructed from Polymarket CLOB price history at a daily cadence and labeled as reconstructed. Contemporary refreshes are archived several times per day. A contract never appears before its first observable quote. When a shorter intraday collection omits an otherwise observable horizon meeting, the last prior quote may be carried forward and is visibly marked.</p>
+        <p>The realized Fed path is overlaid only after the forecast is built. Model-version changes are marked in the replay because historical and current joint-dependence regimes are not directly comparable.</p>
+        <div class="limitations"><b>Important limitations</b><ul><li>Only a small, one-sided set of resolved meetings is available, with no resolved hikes in the current evaluation sample.</li><li>Open-ended action and rate tails use boundary representatives, which understates tail variance.</li><li>Kernel parameters are scenario choices; sensitivity can be economically meaningful.</li><li>No contemporaneous Fed funds futures benchmark is yet included.</li><li>Quoted probabilities omit fees, spread, slippage, settlement risk, and venue-specific participation effects.</li></ul></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>FED FORECAST / METHOD NOTE</span><span>Updated from the public archive</span><span class="footer-links"><a href="index.html">Replay ↗</a><a href="data/dashboard.json">Data ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a></span></footer>
+  <script src="assets/methodology.js?v=1" defer></script>
+</body>
+</html>

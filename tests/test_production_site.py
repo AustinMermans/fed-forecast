@@ -21,6 +21,13 @@ class ProductionSiteTests(unittest.TestCase):
         self.assertNotIn('id="labor"', html)
         self.assertIn("CONDITIONAL PATH EXPLORER", html)
 
+    def test_public_methodology_separates_quotes_model_and_evidence(self) -> None:
+        html = (ROOT / "site/methodology.html").read_text(encoding="utf-8")
+        for phrase in ("Five binary contracts", "Marginals do not identify a path", "SMALL-SAMPLE EVIDENCE", "Unit of observation"):
+            self.assertIn(phrase, html)
+        self.assertNotIn("PRODUCT_SPEC", html)
+        self.assertNotIn("IMPLEMENTATION_PLAN", html)
+
     def test_every_current_meeting_has_five_normalized_prices_and_quality(self) -> None:
         for meeting in self.dashboard["policy"]["meetings"]:
             self.assertEqual(len(meeting["prices"]), 5)
@@ -40,6 +47,10 @@ class ProductionSiteTests(unittest.TestCase):
         html = (ROOT / "site/index.html").read_text(encoding="utf-8")
         for element_id in set(re.findall(r'\$\("([^"]+)"\)', javascript)):
             self.assertIn(f'id="{element_id}"', html)
+        methodology = (ROOT / "site/assets/methodology.js").read_text(encoding="utf-8")
+        method_html = (ROOT / "site/methodology.html").read_text(encoding="utf-8")
+        for element_id in set(re.findall(r'\$\("([^"]+)"\)', methodology)):
+            self.assertIn(f'id="{element_id}"', method_html)
 
     def test_terminal_anchor_is_drawn_as_an_explicit_bridge(self) -> None:
         javascript = (ROOT / "site/assets/dashboard.js").read_text(encoding="utf-8")

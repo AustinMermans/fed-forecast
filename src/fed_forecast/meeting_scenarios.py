@@ -211,15 +211,15 @@ def _build_conditional_tree(
     def matching_total(prefix: tuple[int, ...]) -> float:
         return sum(weight for weight, (path, _) in zip(weights, state_keys, strict=True) if path[:len(prefix)] == prefix)
 
-    def terminal_expectation(prefix: tuple[int, ...]) -> float:
+    def terminal_distribution(prefix: tuple[int, ...]) -> tuple[float, ...]:
         denominator = matching_total(prefix)
         if denominator <= 0:
             raise MeetingScenarioError("conditional tree node has zero probability")
-        return sum(
-            weight * terminal_rates[terminal_index]
-            for weight, (path, terminal_index) in zip(weights, state_keys, strict=True)
-            if path[:len(prefix)] == prefix
-        ) / denominator
+        probabilities = [0.0] * len(terminal_rates)
+        for weight, (path, terminal_index) in zip(weights, state_keys, strict=True):
+            if path[:len(prefix)] == prefix:
+                probabilities[terminal_index] += weight / denominator
+        return tuple(probabilities)
 
     nodes: list[dict[str, object]] = []
     node_ids: dict[tuple[int, ...], str] = {}
@@ -234,7 +234,11 @@ def _build_conditional_tree(
             # the separately traded terminal state. A later action must not
             # retroactively revise that established rate anchor.
             terminal_prefix = prefix[:terminal_depth] if depth > terminal_depth else prefix
-            conditional_terminal = terminal_expectation(terminal_prefix)
+            conditional_terminal_probabilities = terminal_distribution(terminal_prefix)
+            conditional_terminal = sum(
+                probability * rate
+                for probability, rate in zip(conditional_terminal_probabilities, terminal_rates, strict=True)
+            )
             realized_actions = [meeting_actions[index][outcome] for index, outcome in enumerate(prefix)]
             before_or_at_terminal = [
                 action for index, action in enumerate(realized_actions) if meeting_dates[index] <= terminal_date
@@ -246,6 +250,14 @@ def _build_conditional_tree(
                 representative_upper = conditional_terminal + sum(after_terminal) / 100.0
             else:
                 representative_upper = config.target_upper_bound + sum(before_or_at_terminal) / 100.0
+            if depth and meeting_dates[depth - 1] >= terminal_date:
+                shift = sum(after_terminal) / 100.0
+                rate_distribution = [
+                    {"rate": rate + shift, "probability": conditional_terminal_probabilities[index]}
+                    for index, rate in enumerate(terminal_rates)
+                ]
+            else:
+                rate_distribution = [{"rate": representative_upper, "probability": 1.0}]
             # At the terminal meeting, keep the realized meeting action and the
             # separately traded terminal-rate constraint as two distinct
             # quantities.  The interactive chart can then show the action
@@ -282,6 +294,7 @@ def _build_conditional_tree(
                 "conditional_terminal_expected_upper": conditional_terminal,
                 "action_implied_target_upper": action_implied_upper,
                 "representative_target_upper": representative_upper,
+                "rate_distribution": rate_distribution,
                 "branches": branches,
             })
 

@@ -151,6 +151,9 @@ def _compact_tree(payload: dict[str, Any]) -> dict[str, Any]:
                 "probability": node["path_probability"],
                 "rate": node["representative_target_upper"],
                 "action_rate": node.get("action_implied_target_upper", node["representative_target_upper"]),
+                "rate_distribution": node.get("rate_distribution", [{
+                    "rate": node["representative_target_upper"], "probability": 1.0,
+                }]),
                 "next_date": node["next_meeting_date"],
                 "next": node["next_probabilities"],
                 "branches": node["branches"],
@@ -201,11 +204,34 @@ def _ensure_action_rates(policy: dict[str, Any]) -> dict[str, Any]:
 def _compact_policy(
     payload: dict[str, Any], activity_by_slug: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    terminal = dict(payload["terminal_anchor"])
+    quality_rows = payload.get("price_quality", [])
+    terminal_slug = str(terminal.get("event_slug", ""))
+    matching_quality = [
+        row for row in quality_rows
+        if isinstance(row, dict) and row.get("source_id") == terminal_slug
+    ] if isinstance(quality_rows, list) else []
+    if matching_quality:
+        sources = {str(row.get("source")) for row in matching_quality}
+        qualities = {str(row.get("quality")) for row in matching_quality}
+        stamps = [str(row.get("retrieved_at")) for row in matching_quality if row.get("retrieved_at")]
+        terminal["quote_quality"] = {
+            "source": next(iter(sources)) if len(sources) == 1 else "mixed",
+            "quality": "good" if qualities == {"good"} else "degraded",
+            "as_of": max(stamps) if stamps else payload.get("snapshot_fetched_at"),
+            "max_spread": max(
+                (float(row["spread"]) for row in matching_quality if isinstance(row.get("spread"), (int, float))),
+                default=None,
+            ),
+        }
+    activity = (activity_by_slug or {}).get(terminal_slug)
+    if activity:
+        terminal["activity"] = activity
     return _ensure_action_rates({
         "target_upper_bound_baseline": payload["target_upper_bound_baseline"],
         "effective_rate_baseline": payload["effective_rate_baseline"],
         "meetings": _compact_meetings(payload, activity_by_slug),
-        "terminal_anchor": payload["terminal_anchor"],
+        "terminal_anchor": terminal,
         "tree": _compact_tree(payload),
         "historical_diagnostic": _compact_historical_diagnostic(payload.get("historical_transition_diagnostic")),
         "source_urls": payload["source_urls"],
@@ -1021,9 +1047,6 @@ def build(output: Path) -> Path:
     daily_path.write_text(json.dumps(daily, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
     (output / ".nojekyll").touch()
 
-    _copy_if_present(meeting_run / "conditional_rate_fan.svg", assets_dir / "conditional_rate_fan.svg")
-    _copy_if_present(meeting_run / "conditional_tree.svg", assets_dir / "conditional_tree.svg")
-    _copy_if_present(meeting_run / "meeting_scenarios.svg", assets_dir / "meeting_scenarios.svg")
     return output
 
 

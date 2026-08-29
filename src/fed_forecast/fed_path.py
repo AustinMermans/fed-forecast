@@ -1,21 +1,14 @@
 """Pure arithmetic for a Polymarket-implied fed-funds path."""
 
 import math
-from collections.abc import Mapping
 from decimal import Decimal
-from datetime import date
 
 from .fed_path_models import (
-    FedPathConfig,
-    FedPathPoint,
-    FedPathResult,
     MeetingConfig,
     MeetingDistribution,
     MeetingPrice,
     NormalizedMeetingPrice,
-    TerminalAnchor,
 )
-from .models import Diagnostic, stable_unique_diagnostics
 
 
 class FedPathError(ValueError):
@@ -26,10 +19,6 @@ def _finite(value: float, description: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
         raise FedPathError(f"{description} must be finite")
     return float(value)
-
-
-def _diagnostic(code: str, message: str, source_id: str | None = None) -> Diagnostic:
-    return Diagnostic("warning", source_id, code, message)
 
 
 def _close(left: float, right: float) -> bool:
@@ -152,133 +141,4 @@ def compute_meeting_distribution(
         increase_probability=probability["25 bps increase"] + probability["50+ bps increase"],
         negative_tail_probability=probability["50+ bps decrease"],
         positive_tail_probability=probability["50+ bps increase"],
-    )
-
-
-def _terminal_anchor(config: FedPathConfig, terminal_prices: Mapping[str, float]) -> TerminalAnchor:
-    expected_labels = tuple(bucket.label for bucket in config.terminal_buckets)
-    if set(terminal_prices) != set(expected_labels) or len(terminal_prices) != len(expected_labels):
-        raise FedPathError("terminal price topology must contain exactly the configured 15 buckets")
-    raw: dict[str, float] = {}
-    for label in expected_labels:
-        value = _finite(terminal_prices[label], "terminal raw probability")
-        if not 0.0 <= value <= 1.0:
-            raise FedPathError("terminal raw probability must be within [0, 1]")
-        raw[label] = value
-    raw_total = sum(raw.values())
-    if not math.isfinite(raw_total) or raw_total <= 0.0:
-        raise FedPathError("terminal raw total must be positive and finite")
-    probabilities = {label: raw[label] / raw_total for label in expected_labels}
-    expected_target_upper = sum(
-        probabilities[bucket.label] * bucket.representative_rate
-        for bucket in config.terminal_buckets
-    )
-    if not math.isfinite(expected_target_upper) or not math.isclose(sum(probabilities.values()), 1.0, rel_tol=0.0, abs_tol=1e-12):
-        raise FedPathError("terminal distribution invariants failed")
-    return TerminalAnchor(
-        event_slug=config.terminal_event_slug,
-        raw_total=raw_total,
-        probabilities=probabilities,
-        expected_target_upper=expected_target_upper,
-        effective_rate_proxy=expected_target_upper - (config.target_upper_bound - config.effective_rate_baseline),
-        lower_tail_probability=probabilities[config.terminal_buckets[0].label],
-        upper_tail_probability=probabilities[config.terminal_buckets[-1].label],
-    )
-
-
-def _wirp_by_date(config: FedPathConfig) -> dict[date, object]:
-    return {row.date: row for row in config.wirp_rows}
-
-
-def _point(
-    *, date_value: date, kind: str, change_bp: float, cumulative_bp: float,
-    config: FedPathConfig, wirp_by_date: Mapping[date, object], decrease: float | None,
-    no_change: float | None, increase: float | None, negative_tail: float,
-    positive_tail: float,
-) -> FedPathPoint:
-    row = wirp_by_date.get(date_value)
-    return FedPathPoint(
-        date=date_value, kind=kind, implied_change_bp=change_bp,
-        cumulative_change_bp=cumulative_bp, incremental_moves=change_bp / config.standard_move_bp,
-        cumulative_moves=cumulative_bp / config.standard_move_bp,
-        implied_target_upper=config.target_upper_bound + cumulative_bp / 100.0,
-        implied_effective_rate=config.effective_rate_baseline + cumulative_bp / 100.0,
-        decrease_probability=decrease, no_change_probability=no_change,
-        increase_probability=increase, negative_tail_probability=negative_tail,
-        positive_tail_probability=positive_tail, tail_capped=True,
-        wirp_incremental_moves=None if row is None else row.incremental_moves,
-        wirp_cumulative_moves=None if row is None else row.cumulative_moves,
-        wirp_implied_rate_delta=None if row is None else row.implied_rate_delta,
-        wirp_implied_rate=None if row is None else row.implied_rate,
-        polymarket_minus_wirp_incremental_moves=None if row is None else change_bp / config.standard_move_bp - row.incremental_moves,
-        polymarket_minus_wirp_cumulative_moves=None if row is None else cumulative_bp / config.standard_move_bp - row.cumulative_moves,
-        polymarket_minus_wirp_implied_rate=None if row is None else config.effective_rate_baseline + cumulative_bp / 100.0 - row.implied_rate,
-        polymarket_minus_wirp_implied_rate_bp=None if row is None else 100.0 * (config.effective_rate_baseline + cumulative_bp / 100.0 - row.implied_rate),
-    )
-
-
-def compute_fed_path(
-    config: FedPathConfig,
-    meetings: tuple[MeetingDistribution, ...],
-    terminal_prices: Mapping[str, float],
-    *,
-    generated_at: str,
-    snapshot_fetched_at: str,
-    diagnostics: tuple[Diagnostic, ...] = (),
-) -> FedPathResult:
-    """Accumulate expected meeting moves and replace December with the terminal anchor."""
-    if len(meetings) != len(config.meetings):
-        raise FedPathError("meeting distributions must match all configured meetings")
-    for expected_config, meeting in zip(config.meetings, meetings, strict=True):
-        _validate_meeting_distribution(expected_config, meeting)
-    terminal = _terminal_anchor(config, terminal_prices)
-    wirp_by_date = _wirp_by_date(config)
-    result_diagnostics: list[Diagnostic] = list(diagnostics)
-    points: list[FedPathPoint] = []
-    cumulative_bp = 0.0
-    for meeting in meetings:
-        if not math.isfinite(meeting.expected_change_bp):
-            raise FedPathError("meeting expected change must be finite")
-        cumulative_bp += meeting.expected_change_bp
-        points.append(_point(
-            date_value=meeting.config.date, kind="meeting_distribution",
-            change_bp=meeting.expected_change_bp, cumulative_bp=cumulative_bp, config=config,
-            wirp_by_date=wirp_by_date, decrease=meeting.decrease_probability,
-            no_change=meeting.no_change_probability, increase=meeting.increase_probability,
-            negative_tail=meeting.negative_tail_probability, positive_tail=meeting.positive_tail_probability,
-        ))
-        if _meeting_prices_renormalized(meeting.raw_total):
-            result_diagnostics.append(_diagnostic("meeting_prices_renormalized", "The five mutually exclusive meeting prices were normalized.", meeting.config.event_slug))
-    result_diagnostics.extend((
-        _diagnostic("tail_bucket_capped", "Open-ended meeting and terminal tails use their boundary representatives."),
-        _diagnostic("terminal_anchor_substitution", "December uses the separately traded end-2026 terminal distribution.", config.terminal_event_slug),
-        _diagnostic("no_polymarket_2027_coverage", "No comparable Polymarket meeting or terminal coverage is configured for 2027."),
-    ))
-    terminal_candidates = tuple(row.date for row in config.wirp_rows if row.date.year == config.pricing_date.year)
-    terminal_date = max(terminal_candidates, default=None)
-    if terminal_date is None:
-        raise FedPathError("WIRP comparison must provide the December terminal date")
-    prior_target_upper = points[-1].implied_target_upper if points else config.target_upper_bound
-    december_change_bp = 100.0 * (terminal.expected_target_upper - prior_target_upper)
-    december_cumulative_bp = 100.0 * (terminal.expected_target_upper - config.target_upper_bound)
-    points.append(_point(
-        date_value=terminal_date, kind="terminal_anchor", change_bp=december_change_bp,
-        cumulative_bp=december_cumulative_bp, config=config, wirp_by_date=wirp_by_date,
-        decrease=None, no_change=None, increase=None,
-        negative_tail=terminal.lower_tail_probability, positive_tail=terminal.upper_tail_probability,
-    ))
-    if abs(december_change_bp) > 50.0:
-        result_diagnostics.append(_diagnostic("cross_market_path_inconsistency", "The terminal anchor implies a December step exceeding 50 bp.", config.terminal_event_slug))
-    for point in points:
-        if not all(math.isfinite(value) for value in (point.implied_change_bp, point.cumulative_change_bp, point.incremental_moves, point.cumulative_moves, point.implied_target_upper, point.implied_effective_rate)):
-            raise FedPathError("fed-path point invariants failed")
-    return FedPathResult(
-        generated_at=generated_at, snapshot_fetched_at=snapshot_fetched_at,
-        target_upper_bound_baseline=config.target_upper_bound,
-        effective_rate_baseline=config.effective_rate_baseline,
-        baseline_spread=round(config.target_upper_bound - config.effective_rate_baseline, 12),
-        standard_move_bp=config.standard_move_bp,
-        wirp_rows=config.wirp_rows,
-        points=tuple(points), meeting_distributions=meetings, terminal=terminal,
-        diagnostics=stable_unique_diagnostics(result_diagnostics),
     )
