@@ -34,11 +34,21 @@ provenance, cross-market consistency audit, and small-sample forecast scores.
   snapshots are archived four times per day. The realized target path is
   added afterward for comparison.
 
+The inactive historical-transition diagnostic is published separately from
+the live tree. Its legacy 15:30 full-communications sample contains 13
+adjacent transitions (3 cuts, 10 holds, 0 hikes) and zero scored walk-forward
+folds; it has no out-of-sample performance evidence and five failed production
+gates. Ten-minute surfaces may be synthetic or non-simultaneous. A new 14:15
+study remains pending sourced official-release timestamps and tight quote
+synchronization. The compact, manifest-pinned record is available at
+[`site/data/evidence-summary.json`](site/data/evidence-summary.json).
+
 ## Run locally
 
 ```sh
 PYTHONPATH=src python -m unittest discover -s tests
-python scripts/build_github_pages.py --output site
+python scripts/build_github_pages.py --output site \
+  --evidence-summary site/data/evidence-summary.json
 python -m http.server 8767 --directory site
 ```
 
@@ -63,6 +73,9 @@ times per day and deploys the static `site/` directory to GitHub Pages.
 - `outputs/` — immutable verified run archive used by the builder
 - `site/` — deployable GitHub Pages application and compact public data
 - `tests/` — model, replay, parser, and publication invariants
+
+No Fed funds futures comparison, fee-adjusted probability, calibration claim,
+or learned transition is part of Stage 1A.
 
 The archive is explanatory research, not a trading recommendation or proof of
 calibration. See the [data and attribution notice](NOTICE.md).

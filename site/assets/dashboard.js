@@ -41,6 +41,7 @@ const categoryLetter = {
 
 const state = {
   dashboard: null,
+  evidence: { status: "unavailable", reason: "not_loaded" },
   replay: null,
   index: [],
   vintages: [],
@@ -431,6 +432,66 @@ function weightedQuantile(points, q) {
   return ordered.at(-1).rate;
 }
 
+async function sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, "0")).join("");
+}
+
+async function loadEvidenceSummary(contract) {
+  if (!globalThis.FedForecastBranch?.loadEvidenceSummary) return { status: "unavailable", reason: "malformed" };
+  return globalThis.FedForecastBranch.loadEvidenceSummary(contract, fetch, sha256Hex);
+}
+
+function renderEvidenceRail() {
+  const evidenceAvailable = state.evidence.status === "available";
+  const legacy = evidenceAvailable ? state.evidence.value.legacy_canonical_15_30 : null;
+  const items = [
+    ["Meeting probabilities", "MARKET OBSERVED", "Normalized from five Polymarket Yes prices.", "observed"],
+    ["Conditional response", "MODEL ASSUMED", "Persistence + IPF; not historically estimated.", "assumed"],
+    ["Selected-event surprise", "DERIVED", "Action relative to the expectation at this branch.", "derived"],
+    ["Historical transitions", evidenceAvailable ? "DIAGNOSTIC ONLY" : "UNAVAILABLE", evidenceAvailable ? `Legacy 15:30: ${legacy.transition_count} transitions · ${legacy.row_counts.down}/${legacy.row_counts.unchanged}/${legacy.row_counts.up} · 0 scored folds · not active.` : "Evidence file missing, malformed, or stale; diagnostic claims withheld.", "diagnostic"],
+    ["Market frictions", "NOT ADJUSTED", "Spread, fees, rewards, funding and slippage are context, not removed.", "diagnostic"],
+    ["Fed funds futures", "NOT CONNECTED", "No relative-performance or agreement claim.", "diagnostic"],
+  ];
+  const rail = $("evidence-rail");
+  rail.replaceChildren(...items.map(([title, badge, copy, kind]) => {
+    const item = document.createElement("div");
+    item.className = `evidence-item ${kind}`;
+    const titleNode = document.createElement("span");
+    const badgeNode = document.createElement("b");
+    const copyNode = document.createElement("small");
+    titleNode.textContent = title;
+    badgeNode.textContent = badge;
+    copyNode.textContent = copy;
+    item.append(titleNode, badgeNode, copyNode);
+    return item;
+  }));
+}
+
+function renderBranchDecomposition(vintage) {
+  const holder = $("branch-decomposition");
+  if (!vintage.policy.tree || !state.branchPath.length || !globalThis.FedForecastBranch) {
+    holder.hidden = true;
+    holder.replaceChildren();
+    return;
+  }
+  const prior = state.branchPath.slice(0, -1);
+  const selected = state.branchPath.at(-1);
+  const evidence = state.evidence.status === "available" ? state.evidence.value : null;
+  const result = globalThis.FedForecastBranch.decomposeSelection(vintage.policy.tree, vintage.policy.meetings, prior, selected, evidence);
+  const source = result.selected_probability_source === "market_observed_marginal" ? "MARKET OBSERVED MARGINAL" : "MODEL ASSUMED CONDITIONAL";
+  const support = result.diagnostic_surprise_support.status === "unavailable_pending_comparable_14_15_run"
+    ? "HISTORICAL SUPPORT COMPARISON UNAVAILABLE"
+    : "COMPARABLE DIAGNOSTIC SUPPORT";
+  const categoryNames = ["−50", "−25", "0", "+25", "+50"];
+  const repricing = result.later_repricing.map(row => `<div class="repricing-row"><b>${month(row.meeting_date)}</b><span class="repricing-source">MODEL ASSUMED · E[A] ${bp(row.before_expected_action_bp)} → ${bp(row.after_expected_action_bp)} · Δ ${bp(row.delta_expected_action_bp)}</span>${row.before_probabilities.map((before, index) => `<span><i>${categoryNames[index]}</i>${pct(before)} → ${pct(row.after_probabilities[index])}<em>${pp(row.delta_probability_points[index])}</em></span>`).join("")}</div>`).join("");
+  holder.innerHTML = `<div class="surprise-head"><span>HYPOTHETICAL SELECTED ACTION</span><strong>${bp(result.selected_action_bp)}</strong><i>${source}</i></div>
+    <div class="surprise-metrics"><span>Conditional pre-event expectation <b>${bp(result.conditional_pre_event_expected_action_bp)}</b></span><span>Magnitude surprise <b>${bp(result.magnitude_surprise_bp)} / ${result.magnitude_surprise_25bp_units.toFixed(2)} standard moves</b></span><span>Ex-ante probability <b>${pct(result.ex_ante_probability)} / ${result.information_surprise_bits.toFixed(2)} bits / ${result.information_surprise_nats.toFixed(2)} nats</b></span></div>
+    <p class="support-state">${support} · Information surprise is ex-ante rarity, not economic significance.</p>
+    <div class="repricing-head"><b>Later probabilities under the structural assumption</b><span>Before → after · change in probability points</span></div>${repricing || "<p>No later meeting remains.</p>"}`;
+  holder.hidden = false;
+}
+
 function renderTree(vintage, animateFromPath = null) {
   const tree = vintage.policy.tree;
   const unavailable = $("tree-availability");
@@ -451,12 +512,13 @@ function renderTree(vintage, animateFromPath = null) {
   if (state.branchPath.length > meetings.length) state.branchPath = [];
   const idForPath = path => path.length ? path.join("_") : "root";
   const selectedNode = nodes.get(idForPath(state.branchPath));
+  renderBranchDecomposition(vintage);
   const depth = state.branchPath.length;
   $("branch-step").textContent = depth < meetings.length ? `NEXT DECISION · ${depth + 1} OF ${meetings.length}` : "COMPLETE CONDITIONAL PATH";
   $("branch-meeting").textContent = depth < meetings.length ? month(meetings[depth].date) : "Terminal state";
   const selectedPath = state.branchPath.map(value => categoryLetter[value]).join(" → ");
   if (!depth) {
-    $("branch-path").textContent = `Start at ${rate(vintage.policy.target_upper_bound_baseline)}. Choose a realized outcome to update every later branch.`;
+    $("branch-path").textContent = `Start at ${rate(vintage.policy.target_upper_bound_baseline)}. Choose a hypothetical outcome to update every later branch.`;
   } else {
     $("branch-path").textContent = `${selectedPath} · ${(100 * selectedNode.probability).toFixed(2)}% unconditional path mass · ${rate(selectedNode.rate)} action-implied path level`;
   }
@@ -854,6 +916,8 @@ async function main() {
     const response = await fetch("data/dashboard.json", { cache: "no-store" });
     if (!response.ok) throw new Error(`dashboard HTTP ${response.status}`);
     state.dashboard = await response.json();
+    state.evidence = await loadEvidenceSummary(state.dashboard.evidence_summary);
+    renderEvidenceRail();
     const replayResponse = await fetch(state.dashboard.forecast_replay_url || "data/forecast-replay.json", { cache: "no-store" });
     if (!replayResponse.ok) throw new Error(`forecast replay HTTP ${replayResponse.status}`);
     state.replay = await replayResponse.json();

@@ -5,10 +5,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
 import re
 import shutil
+import sys
 from datetime import datetime, timezone
 from itertools import product
 from pathlib import Path
@@ -17,10 +19,41 @@ from zoneinfo import ZoneInfo
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from fed_forecast.historical_transitions_evidence import validate_evidence_summary  # noqa: E402
 DEFAULT_OUTPUT = PROJECT_ROOT / "site"
 ACTION_BUCKETS_BP = (-50.0, -25.0, 0.0, 25.0, 50.0)
 ACTION_SCORES = (-1.0, -0.5, 0.0, 0.5, 1.0)
 REPLAY_WINDOW_DAYS = 183
+
+
+def _strict_json_bytes(content: bytes, name: str) -> Any:
+    def pairs(values: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in values:
+            if key in result:
+                raise ValueError(f"duplicate JSON key in {name}: {key}")
+            result[key] = value
+        return result
+    value = json.loads(content, object_pairs_hook=pairs, parse_constant=lambda item: (_ for _ in ()).throw(ValueError(f"non-finite JSON value in {name}: {item}")))
+    def finite(item: Any) -> None:
+        if isinstance(item, float) and not math.isfinite(item):
+            raise ValueError(f"non-finite JSON value in {name}")
+        if isinstance(item, dict):
+            for nested in item.values(): finite(nested)
+        elif isinstance(item, list):
+            for nested in item: finite(nested)
+    finite(value)
+    return value
+
+
+def _verified_evidence_summary(path: Path) -> tuple[dict[str, Any], bytes]:
+    content = path.read_bytes()
+    value = _strict_json_bytes(content, path.name)
+    if not isinstance(value, dict):
+        raise ValueError("evidence summary must be an object")
+    validate_evidence_summary(value)
+    return value, content
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -997,12 +1030,18 @@ def _copy_if_present(source: Path | None, target: Path) -> None:
         shutil.copyfile(source, target)
 
 
-def build(output: Path) -> Path:
+def build(output: Path, evidence_summary_source: Path | None = None) -> Path:
     output.mkdir(parents=True, exist_ok=True)
     data_dir = output / "data"
     assets_dir = output / "assets"
     data_dir.mkdir(exist_ok=True)
     assets_dir.mkdir(exist_ok=True)
+
+    evidence_target = data_dir / "evidence-summary.json"
+    evidence_source = evidence_summary_source or (evidence_target if evidence_target.exists() else PROJECT_ROOT / "site" / "data" / "evidence-summary.json")
+    evidence, evidence_bytes = _verified_evidence_summary(evidence_source)
+    evidence_target.write_bytes(evidence_bytes)
+    evidence_sha256 = hashlib.sha256(evidence_bytes).hexdigest()
 
     prior_dashboard = None
     prior_path = data_dir / "dashboard.json"
@@ -1087,6 +1126,14 @@ def build(output: Path) -> Path:
         "events": events,
         "vintage_index": vintage_index,
         "forecast_replay_url": "data/forecast-replay.json",
+        "evidence_summary": {
+            "url": "data/evidence-summary.json",
+            "schema_version": 2,
+            "sha256": evidence_sha256,
+            "generated_at": evidence["summary_generated_at"],
+            "legacy_model_sha256": evidence["legacy_canonical_15_30"]["provenance"]["model_sha256"],
+            "legacy_cutoff_at": evidence["legacy_canonical_15_30"]["provenance"]["data_cutoff_at"],
+        },
     }
     (data_dir / "dashboard.json").write_text(
         json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False),
@@ -1101,8 +1148,9 @@ def build(output: Path) -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--evidence-summary", type=Path)
     args = parser.parse_args()
-    print(build(args.output.resolve()))
+    print(build(args.output.resolve(), args.evidence_summary.resolve() if args.evidence_summary else None))
     return 0
 
 

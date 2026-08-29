@@ -68,7 +68,8 @@
           <div><span>ASSUMED</span><b>Persistence kernel</b><p>A scenario parameter, not a historically estimated coefficient.</p></div>
           <div><span>ENFORCED</span><b>Meeting-marginal recovery by IPF</b><p>The joint distribution returns to every meeting input.</p></div>
         </div>
-        <p>The live adjustment rule is <b>not yet learned from historical post-event reactions</b>. A historical-transition diagnostic exists in the research pipeline, but it is not activated without a validated and adequately identified fit. The fan therefore answers “what follows under this persistence assumption?” rather than “what history proves will follow.”</p>
+        <p>The live adjustment rule is <b>not learned from historical post-event reactions</b>. The separate legacy diagnostic used a 15:30 New York full-communications window and found 13 adjacent transitions: 3 cuts, 10 holds, and no hikes. All 13 walk-forward folds were skipped, leaving no out-of-sample performance evidence. Its five production failures include insufficient total/down/up observations, unidentified timing versus destination, and replay validation. It is diagnostic only and not active in this tree.</p>
+        <p>The legacy marks were allowed within ten-minute surfaces and can therefore be synthetic or non-simultaneous. A new 14:15 action-window study remains pending authoritative decision-release timestamps and tight synchronization; no result is inferred from the existing marks. <a href="data/evidence-summary.json">Read the compact evidence record →</a></p>
         <p>The fan computes quantiles across complete meeting-action paths. A selected orange branch is always jointly realizable on the modeled −50/−25/0/+25/+50 bp lattice. The connected cyan medians are pointwise quantiles and need not themselves form one realized path.</p>
       </div>
     </section>
@@ -111,7 +112,7 @@
     </section>
   </main>
 
-  <footer><span>FED FORECAST / METHOD NOTE</span><span>Updated from the public archive</span><span class="footer-links"><a href="index.html">Replay ↗</a><a href="data/dashboard.json">Data ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a></span></footer>
+  <footer><span>FED FORECAST / METHOD NOTE</span><span>Updated from the public archive</span><span class="footer-links"><a href="index.html">Replay ↗</a><a href="data/dashboard.json">Data ↗</a><a href="data/evidence-summary.json">Evidence ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a></span></footer>
   <script src="assets/methodology.js?v=1" defer></script>
 </body>
 </html>

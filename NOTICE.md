@@ -15,6 +15,12 @@ Federal Reserve Bank of New York.
 - Open-ended meeting buckets are represented as ±50 basis points only for
 computing a displayed path. Prediction-market prices exclude fees, spread,
   slippage, and contract-specific settlement risk.
+- The public historical-transition evidence is a compact diagnostic derived
+  from a manifest-pinned legacy 15:30 run. It is not active in the forecast.
+  The 13 adjacent observations include no realized hikes and no scored
+  walk-forward folds. Legacy ten-minute surfaces may be synthetic or
+  non-simultaneous; the tighter 14:15 study remains pending authoritative
+  decision-release timestamps and synchronized quotes.
 
 Primary public endpoints and documentation:
 

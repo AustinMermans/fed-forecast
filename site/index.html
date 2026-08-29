@@ -82,8 +82,10 @@
 
     <section class="path" id="path">
       <div class="section-label"><span>02</span> CONDITIONAL PATH EXPLORER</div>
-      <div class="block-head"><div><p class="chart-kicker">IF THIS MEETING LANDS HERE</p><h2>How later odds could reprice</h2></div><p>Select a realized move at each meeting. Quoted probabilities supply the unconditional marginals; a transparent structural dependence model conditions later meetings.</p></div>
+      <div class="evidence-rail" id="evidence-rail" aria-label="Evidence status" aria-live="polite"></div>
+      <div class="block-head"><div><p class="chart-kicker">IF THIS MEETING LANDS HERE</p><h2>How later odds could reprice</h2></div><p>Select a hypothetical move at each meeting. Quoted probabilities supply the unconditional marginals; a transparent structural dependence model conditions later meetings.</p></div>
       <div id="tree-availability" class="availability" hidden></div>
+      <div id="branch-decomposition" class="branch-decomposition" hidden aria-live="polite"></div>
       <div class="path-grid" id="path-content">
         <aside class="branch-panel"><p id="branch-step" class="branch-step"></p><h3 id="branch-meeting">—</h3><p id="branch-path" class="branch-path"></p><div id="branch-buttons" class="branch-buttons"></div><button id="branch-back" class="back" type="button">← Undo last outcome</button></aside>
         <div class="fan-block"><div class="fan-caption"><span>Target upper bound</span><span id="fan-caption">Weighted path distribution</span></div><svg id="fan-chart" role="img" aria-label="Conditional target-rate fan through Federal Reserve meetings"></svg></div>
@@ -103,7 +105,8 @@
     </section>
   </main>
 
-  <footer><span>FED FORECAST / PUBLIC ARCHIVE</span><span id="footer-time">—</span><span class="footer-links"><a href="methodology.html">Methodology ↗</a><a href="data/dashboard.json">Data ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a><a href="https://github.com/AustinMermans/fed-forecast/blob/main/NOTICE.md">Notice ↗</a></span></footer>
-  <script src="assets/dashboard.js?v=meeting-lattice-2" defer></script>
+  <footer><span>FED FORECAST / PUBLIC ARCHIVE</span><span id="footer-time">—</span><span class="footer-links"><a href="methodology.html">Methodology ↗</a><a href="data/dashboard.json">Data ↗</a><a href="data/evidence-summary.json">Evidence ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a><a href="https://github.com/AustinMermans/fed-forecast/blob/main/NOTICE.md">Notice ↗</a></span></footer>
+  <script src="assets/branch-decomposition.js?v=stage1a-2" defer></script>
+  <script src="assets/dashboard.js?v=stage1a-2" defer></script>
 </body>
 </html>

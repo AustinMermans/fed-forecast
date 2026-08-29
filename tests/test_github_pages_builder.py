@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import importlib.util
 import math
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "build_github_pages.py"
@@ -14,6 +17,27 @@ SPEC.loader.exec_module(MODULE)
 
 
 class ForecastReplayTests(unittest.TestCase):
+    def test_strict_evidence_json_rejects_duplicate_keys(self) -> None:
+        source = SCRIPT.parents[1] / "site/data/evidence-summary.json"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "evidence.json"
+            path.write_bytes(source.read_bytes().replace(b"{", b'{"schema_version":2,', 1))
+            with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
+                MODULE._verified_evidence_summary(path)
+            path.write_bytes(source.read_bytes().replace(b'"schema_version": 2', b'"schema_version": 1e400', 1))
+            with self.assertRaisesRegex(ValueError, "non-finite"):
+                MODULE._verified_evidence_summary(path)
+
+    def test_no_source_build_preserves_last_good_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "site"
+            shutil.copytree(SCRIPT.parents[1] / "site", output)
+            before = {name: (output / name).read_bytes() for name in ("data/dashboard.json", "data/forecast-replay.json", "data/evidence-summary.json")}
+            with patch.object(MODULE, "PROJECT_ROOT", root):
+                MODULE.build(output)
+            self.assertEqual(before, {name: (output / name).read_bytes() for name in before})
+
     def test_compact_tree_keeps_action_and_terminal_anchor_rates_separate(self) -> None:
         compact = MODULE._compact_tree({
             "conditional_tree": {

@@ -10,7 +10,9 @@ import math
 import os
 import secrets
 import shutil
+import stat
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -21,6 +23,112 @@ from .historical_transitions import (
     scalar_persistence_prediction,
     surface_metrics,
 )
+
+
+RUN_FILE_NAMES = frozenset({
+    "snapshot.json",
+    "topology-ledger.csv",
+    "observations.csv",
+    "exclusions.csv",
+    "event-time-profiles.csv",
+    "model.json",
+    "report.md",
+})
+
+
+@dataclass(frozen=True)
+class VerifiedHistoricalRun:
+    manifest: Mapping[str, object]
+    files: Mapping[str, bytes]
+    manifest_sha256: str
+
+
+def _strict_json_bytes(content: bytes, name: str) -> object:
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"{name} contains non-finite JSON value {value}")
+
+    def reject_duplicates(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"{name} contains duplicate JSON key {key!r}")
+            result[key] = value
+        return result
+
+    def reject_nonfinite(value: object) -> None:
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ValueError(f"{name} contains non-finite JSON number")
+        if isinstance(value, dict):
+            for item in value.values():
+                reject_nonfinite(item)
+        elif isinstance(value, list):
+            for item in value:
+                reject_nonfinite(item)
+
+    try:
+        parsed = json.loads(content, parse_constant=reject_constant, object_pairs_hook=reject_duplicates)
+        reject_nonfinite(parsed)
+        return parsed
+    except UnicodeDecodeError as error:
+        raise ValueError(f"{name} is not UTF-8") from error
+
+
+def _read_regular_file(path: Path) -> bytes:
+    before = os.lstat(path)
+    if not stat.S_ISREG(before.st_mode) or stat.S_ISLNK(before.st_mode):
+        raise ValueError(f"historical artifact is not a regular file: {path.name}")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags)
+    try:
+        after = os.fstat(descriptor)
+        if not stat.S_ISREG(after.st_mode) or (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino):
+            raise ValueError(f"historical artifact changed during verification: {path.name}")
+        chunks: list[bytes] = []
+        while True:
+            chunk = os.read(descriptor, 1024 * 1024)
+            if not chunk:
+                break
+            chunks.append(chunk)
+        return b"".join(chunks)
+    finally:
+        os.close(descriptor)
+
+
+def verify_historical_transition_run(run_dir: Path) -> VerifiedHistoricalRun:
+    """Verify an immutable run without following links or reopening members."""
+    root = Path(run_dir)
+    root_stat = os.lstat(root)
+    if not stat.S_ISDIR(root_stat.st_mode) or stat.S_ISLNK(root_stat.st_mode):
+        raise ValueError("historical run path must be a real directory")
+    expected = RUN_FILE_NAMES | {"manifest.json"}
+    actual = {entry.name for entry in os.scandir(root)}
+    if actual != expected:
+        raise ValueError(f"historical run file allowlist mismatch: {sorted(actual ^ expected)}")
+    manifest_bytes = _read_regular_file(root / "manifest.json")
+    manifest = _strict_json_bytes(manifest_bytes, "manifest.json")
+    if not isinstance(manifest, dict) or set(manifest) != {"schema_version", "files"} or manifest.get("schema_version") != 1:
+        raise ValueError("historical manifest schema is invalid")
+    entries = manifest.get("files")
+    if not isinstance(entries, dict) or set(entries) != RUN_FILE_NAMES:
+        raise ValueError("historical manifest file allowlist is invalid")
+    verified: dict[str, bytes] = {}
+    for name in sorted(RUN_FILE_NAMES):
+        if Path(name).name != name or name in {".", ".."}:
+            raise ValueError("historical manifest contains an unsafe path")
+        metadata = entries[name]
+        if not isinstance(metadata, dict) or set(metadata) != {"sha256", "size_bytes"}:
+            raise ValueError(f"historical manifest metadata is invalid for {name}")
+        content = _read_regular_file(root / name)
+        if metadata["size_bytes"] != len(content) or metadata["sha256"] != hashlib.sha256(content).hexdigest():
+            raise ValueError(f"historical artifact integrity failure: {name}")
+        if name.endswith(".json"):
+            _strict_json_bytes(content, name)
+        verified[name] = content
+    return VerifiedHistoricalRun(
+        manifest=manifest,
+        files=verified,
+        manifest_sha256=hashlib.sha256(manifest_bytes).hexdigest(),
+    )
 
 
 def _portable(value: object) -> object:
@@ -338,6 +446,7 @@ def write_historical_transition_run(
                 handle.write(content)
                 handle.flush()
                 os.fsync(handle.fileno())
+        verify_historical_transition_run(staging)
         os.replace(staging, final)
     except BaseException:
         if staging.exists():

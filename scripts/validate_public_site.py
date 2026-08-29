@@ -4,14 +4,35 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
+import sys
 from datetime import datetime
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+from fed_forecast.historical_transitions_evidence import validate_evidence_summary  # noqa: E402
+
 
 def _load(path: Path) -> dict[str, object]:
-    value = json.loads(path.read_text(encoding="utf-8"))
+    def pairs(values: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in values:
+            if key in result:
+                raise ValueError(f"duplicate JSON key in {path}: {key}")
+            result[key] = value
+        return result
+    value = json.loads(path.read_bytes(), object_pairs_hook=pairs, parse_constant=lambda item: (_ for _ in ()).throw(ValueError(f"non-finite JSON value in {path}: {item}")))
+    def finite(item: object) -> None:
+        if isinstance(item, float) and not math.isfinite(item):
+            raise ValueError(f"non-finite JSON value in {path}")
+        if isinstance(item, dict):
+            for nested in item.values(): finite(nested)
+        elif isinstance(item, list):
+            for nested in item: finite(nested)
+    finite(value)
     if not isinstance(value, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return value
@@ -25,8 +46,10 @@ def validate(site: Path) -> None:
         site / "assets" / "dashboard.js",
         site / "assets" / "methodology.js",
         site / "assets" / "methodology.css",
+        site / "assets" / "branch-decomposition.js",
         site / "data" / "dashboard.json",
         site / "data" / "forecast-replay.json",
+        site / "data" / "evidence-summary.json",
     )
     missing = [str(path) for path in required if not path.is_file()]
     if missing:
@@ -34,6 +57,25 @@ def validate(site: Path) -> None:
 
     dashboard = _load(site / "data" / "dashboard.json")
     replay = _load(site / "data" / "forecast-replay.json")
+    evidence_path = site / "data" / "evidence-summary.json"
+    evidence_bytes = evidence_path.read_bytes()
+    if len(evidence_bytes) > 16 * 1024:
+        raise ValueError("public evidence summary exceeds 16 KiB")
+    evidence = _load(evidence_path)
+    validate_evidence_summary(evidence)
+    contract = dashboard.get("evidence_summary")
+    expected_contract = {
+        "url": "data/evidence-summary.json",
+        "schema_version": 2,
+        "sha256": hashlib.sha256(evidence_bytes).hexdigest(),
+        "generated_at": evidence["summary_generated_at"],
+        "legacy_model_sha256": evidence["legacy_canonical_15_30"]["provenance"]["model_sha256"],
+        "legacy_cutoff_at": evidence["legacy_canonical_15_30"]["provenance"]["data_cutoff_at"],
+    }
+    if not isinstance(contract, dict) or contract != expected_contract:
+        raise ValueError("dashboard evidence contract is stale or malformed")
+    if (site / "data" / "dashboard.json").stat().st_size >= 1024 * 1024:
+        raise ValueError("dashboard.json exceeds 1 MiB")
     policy = dashboard.get("policy")
     if not isinstance(policy, dict):
         raise ValueError("dashboard policy is missing")
