@@ -4,7 +4,7 @@
 <desc id="desc">A five-branch tree in which each exact realized action magnitude changes the probabilities at every future meeting while all current quoted marginals remain preserved.</desc>
 <rect width="100%" height="100%" fill="#fbfaf7"/>
 <text x="55" y="50" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#182737">Fed path as a conditional event tree</text>
-<text x="55" y="80" font-family="system-ui, sans-serif" font-size="14" fill="#596777">Snapshot 2026-08-29T03:56:31.774503Z · 781 nodes · 625 full paths · quoted marginals preserved</text>
+<text x="55" y="80" font-family="system-ui, sans-serif" font-size="14" fill="#596777">Snapshot 2026-08-29T04:14:16.075169Z · 781 nodes · 625 full paths · quoted marginals preserved</text>
 <text x="55" y="122" font-family="system-ui, sans-serif" font-size="16" font-weight="650" fill="#182737">1 · September realization reprices October</text>
 <circle cx="112" cy="260" r="36" fill="#182737"/>
 <text x="112" y="256" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">TODAY</text>
@@ -16,15 +16,15 @@
 <text x="371" y="154.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#ffffff">exact action branch</text>
 <line x1="442" y1="140.0" x2="515" y2="140.0" stroke="#7e8a96" stroke-width="2"/>
 <text x="525" y="122.0" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">OCT conditional -50+ / -25 / 0 / +25 / +50+</text>
-<rect data-conditional-bar="sep-down_50plus-oct-down_50plus" x="525.0" y="132.0" width="5.7" height="24.0" fill="#873f4f"/>
-<rect data-conditional-bar="sep-down_50plus-oct-down_25" x="530.7" y="132.0" width="14.7" height="24.0" fill="#d16b5a"/>
-<rect data-conditional-bar="sep-down_50plus-oct-unchanged" x="545.4" y="132.0" width="247.0" height="24.0" fill="#c8b978"/>
-<text x="668.9" y="148.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">70.6%</text>
+<rect data-conditional-bar="sep-down_50plus-oct-down_50plus" x="525.0" y="132.0" width="5.5" height="24.0" fill="#873f4f"/>
+<rect data-conditional-bar="sep-down_50plus-oct-down_25" x="530.5" y="132.0" width="14.7" height="24.0" fill="#d16b5a"/>
+<rect data-conditional-bar="sep-down_50plus-oct-unchanged" x="545.2" y="132.0" width="247.2" height="24.0" fill="#c8b978"/>
+<text x="668.8" y="148.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">70.6%</text>
 <rect data-conditional-bar="sep-down_50plus-oct-up_25" x="792.4" y="132.0" width="79.9" height="24.0" fill="#5d9fa1"/>
-<text x="832.4" y="148.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">22.8%</text>
+<text x="832.3" y="148.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">22.8%</text>
 <rect data-conditional-bar="sep-down_50plus-oct-up_50plus" x="872.3" y="132.0" width="2.7" height="24.0" fill="#4fc694"/>
 <text x="895" y="135.0" font-family="system-ui, sans-serif" font-size="10" fill="#596777">conditional year-end</text>
-<text x="895" y="153.0" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">3.666%</text>
+<text x="895" y="153.0" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">3.665%</text>
 <path d="M 148 260 C 220 260, 228 200.0, 300 200.0" fill="none" stroke="#d16b5a" stroke-width="3"/>
 <text x="215" y="223.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#d16b5a">0.6%</text>
 <rect x="300" y="177.0" width="142" height="46" rx="8" fill="#d16b5a"/>
@@ -32,15 +32,15 @@
 <text x="371" y="214.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#ffffff">exact action branch</text>
 <line x1="442" y1="200.0" x2="515" y2="200.0" stroke="#7e8a96" stroke-width="2"/>
 <text x="525" y="182.0" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">OCT conditional -50+ / -25 / 0 / +25 / +50+</text>
-<rect data-conditional-bar="sep-down_25-oct-down_50plus" x="525.0" y="192.0" width="4.9" height="24.0" fill="#873f4f"/>
-<rect data-conditional-bar="sep-down_25-oct-down_25" x="529.9" y="192.0" width="13.6" height="24.0" fill="#d16b5a"/>
-<rect data-conditional-bar="sep-down_25-oct-unchanged" x="543.5" y="192.0" width="245.1" height="24.0" fill="#c8b978"/>
-<text x="666.1" y="208.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">70.0%</text>
-<rect data-conditional-bar="sep-down_25-oct-up_25" x="788.6" y="192.0" width="83.5" height="24.0" fill="#5d9fa1"/>
-<text x="830.3" y="208.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">23.8%</text>
+<rect data-conditional-bar="sep-down_25-oct-down_50plus" x="525.0" y="192.0" width="4.7" height="24.0" fill="#873f4f"/>
+<rect data-conditional-bar="sep-down_25-oct-down_25" x="529.7" y="192.0" width="13.6" height="24.0" fill="#d16b5a"/>
+<rect data-conditional-bar="sep-down_25-oct-unchanged" x="543.3" y="192.0" width="245.2" height="24.0" fill="#c8b978"/>
+<text x="665.9" y="208.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">70.1%</text>
+<rect data-conditional-bar="sep-down_25-oct-up_25" x="788.5" y="192.0" width="83.5" height="24.0" fill="#5d9fa1"/>
+<text x="830.3" y="208.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">23.9%</text>
 <rect data-conditional-bar="sep-down_25-oct-up_50plus" x="872.1" y="192.0" width="2.9" height="24.0" fill="#4fc694"/>
 <text x="895" y="195.0" font-family="system-ui, sans-serif" font-size="10" fill="#596777">conditional year-end</text>
-<text x="895" y="213.0" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">3.785%</text>
+<text x="895" y="213.0" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">3.784%</text>
 <path d="M 148 260 C 220 260, 228 260.0, 300 260.0" fill="none" stroke="#c8b978" stroke-width="3"/>
 <text x="215" y="253.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#c8b978">53.2%</text>
 <rect x="300" y="237.0" width="142" height="46" rx="8" fill="#c8b978"/>
@@ -48,15 +48,15 @@
 <text x="371" y="274.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#ffffff">exact action branch</text>
 <line x1="442" y1="260.0" x2="515" y2="260.0" stroke="#7e8a96" stroke-width="2"/>
 <text x="525" y="242.0" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">OCT conditional -50+ / -25 / 0 / +25 / +50+</text>
-<rect data-conditional-bar="sep-unchanged-oct-down_50plus" x="525.0" y="252.0" width="4.3" height="24.0" fill="#873f4f"/>
-<rect data-conditional-bar="sep-unchanged-oct-down_25" x="529.3" y="252.0" width="12.8" height="24.0" fill="#d16b5a"/>
-<rect data-conditional-bar="sep-unchanged-oct-unchanged" x="542.1" y="252.0" width="243.2" height="24.0" fill="#c8b978"/>
-<text x="663.8" y="268.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">69.5%</text>
-<rect data-conditional-bar="sep-unchanged-oct-up_25" x="785.4" y="252.0" width="86.5" height="24.0" fill="#5d9fa1"/>
+<rect data-conditional-bar="sep-unchanged-oct-down_50plus" x="525.0" y="252.0" width="4.1" height="24.0" fill="#873f4f"/>
+<rect data-conditional-bar="sep-unchanged-oct-down_25" x="529.1" y="252.0" width="12.8" height="24.0" fill="#d16b5a"/>
+<rect data-conditional-bar="sep-unchanged-oct-unchanged" x="542.0" y="252.0" width="243.3" height="24.0" fill="#c8b978"/>
+<text x="663.6" y="268.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">69.5%</text>
+<rect data-conditional-bar="sep-unchanged-oct-up_25" x="785.3" y="252.0" width="86.5" height="24.0" fill="#5d9fa1"/>
 <text x="828.6" y="268.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">24.7%</text>
 <rect data-conditional-bar="sep-unchanged-oct-up_50plus" x="871.8" y="252.0" width="3.2" height="24.0" fill="#4fc694"/>
 <text x="895" y="255.0" font-family="system-ui, sans-serif" font-size="10" fill="#596777">conditional year-end</text>
-<text x="895" y="273.0" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">3.862%</text>
+<text x="895" y="273.0" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">3.861%</text>
 <path d="M 148 260 C 220 260, 228 320.0, 300 320.0" fill="none" stroke="#5d9fa1" stroke-width="3"/>
 <text x="215" y="283.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#5d9fa1">45.3%</text>
 <rect x="300" y="297.0" width="142" height="46" rx="8" fill="#5d9fa1"/>
@@ -64,12 +64,12 @@
 <text x="371" y="334.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#ffffff">exact action branch</text>
 <line x1="442" y1="320.0" x2="515" y2="320.0" stroke="#7e8a96" stroke-width="2"/>
 <text x="525" y="302.0" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">OCT conditional -50+ / -25 / 0 / +25 / +50+</text>
-<rect data-conditional-bar="sep-up_25-oct-down_50plus" x="525.0" y="312.0" width="3.9" height="24.0" fill="#873f4f"/>
-<rect data-conditional-bar="sep-up_25-oct-down_25" x="528.9" y="312.0" width="12.2" height="24.0" fill="#d16b5a"/>
-<rect data-conditional-bar="sep-up_25-oct-unchanged" x="541.1" y="312.0" width="241.4" height="24.0" fill="#c8b978"/>
-<text x="661.8" y="328.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">69.0%</text>
-<rect data-conditional-bar="sep-up_25-oct-up_25" x="782.5" y="312.0" width="89.1" height="24.0" fill="#5d9fa1"/>
-<text x="827.1" y="328.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">25.5%</text>
+<rect data-conditional-bar="sep-up_25-oct-down_50plus" x="525.0" y="312.0" width="3.7" height="24.0" fill="#873f4f"/>
+<rect data-conditional-bar="sep-up_25-oct-down_25" x="528.7" y="312.0" width="12.2" height="24.0" fill="#d16b5a"/>
+<rect data-conditional-bar="sep-up_25-oct-unchanged" x="540.9" y="312.0" width="241.5" height="24.0" fill="#c8b978"/>
+<text x="661.7" y="328.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">69.0%</text>
+<rect data-conditional-bar="sep-up_25-oct-up_25" x="782.4" y="312.0" width="89.2" height="24.0" fill="#5d9fa1"/>
+<text x="827.0" y="328.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">25.5%</text>
 <rect data-conditional-bar="sep-up_25-oct-up_50plus" x="871.6" y="312.0" width="3.4" height="24.0" fill="#4fc694"/>
 <text x="895" y="315.0" font-family="system-ui, sans-serif" font-size="10" fill="#596777">conditional year-end</text>
 <text x="895" y="333.0" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">3.913%</text>
@@ -80,10 +80,10 @@
 <text x="371" y="394.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#ffffff">exact action branch</text>
 <line x1="442" y1="380.0" x2="515" y2="380.0" stroke="#7e8a96" stroke-width="2"/>
 <text x="525" y="362.0" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">OCT conditional -50+ / -25 / 0 / +25 / +50+</text>
-<rect data-conditional-bar="sep-up_50plus-oct-down_50plus" x="525.0" y="372.0" width="3.6" height="24.0" fill="#873f4f"/>
-<rect data-conditional-bar="sep-up_50plus-oct-down_25" x="528.6" y="372.0" width="11.7" height="24.0" fill="#d16b5a"/>
-<rect data-conditional-bar="sep-up_50plus-oct-unchanged" x="540.2" y="372.0" width="239.6" height="24.0" fill="#c8b978"/>
-<text x="660.0" y="388.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">68.5%</text>
+<rect data-conditional-bar="sep-up_50plus-oct-down_50plus" x="525.0" y="372.0" width="3.4" height="24.0" fill="#873f4f"/>
+<rect data-conditional-bar="sep-up_50plus-oct-down_25" x="528.4" y="372.0" width="11.7" height="24.0" fill="#d16b5a"/>
+<rect data-conditional-bar="sep-up_50plus-oct-unchanged" x="540.1" y="372.0" width="239.7" height="24.0" fill="#c8b978"/>
+<text x="659.9" y="388.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">68.5%</text>
 <rect data-conditional-bar="sep-up_50plus-oct-up_25" x="779.8" y="372.0" width="91.6" height="24.0" fill="#5d9fa1"/>
 <text x="825.6" y="388.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">26.2%</text>
 <rect data-conditional-bar="sep-up_50plus-oct-up_50plus" x="871.4" y="372.0" width="3.6" height="24.0" fill="#4fc694"/>
@@ -108,7 +108,7 @@
 <text x="131" y="574" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#ffffff">-50+ BP</text>
 <rect data-conditional-bar="0-down_50plus-down_50plus" x="207.0" y="556.0" width="5.4" height="26.0" fill="#873f4f"/>
 <rect data-conditional-bar="0-down_50plus-down_25" x="212.4" y="556.0" width="23.5" height="26.0" fill="#d16b5a"/>
-<rect data-conditional-bar="0-down_50plus-unchanged" x="235.9" y="556.0" width="195.6" height="26.0" fill="#c8b978"/>
+<rect data-conditional-bar="0-down_50plus-unchanged" x="235.9" y="556.0" width="195.7" height="26.0" fill="#c8b978"/>
 <text x="333.7" y="573.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">46.6%</text>
 <rect data-conditional-bar="0-down_50plus-up_25" x="431.5" y="556.0" width="190.3" height="26.0" fill="#5d9fa1"/>
 <text x="526.7" y="573.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">45.3%</text>
@@ -118,7 +118,7 @@
 <rect data-conditional-bar="0-down_25-down_50plus" x="207.0" y="610.0" width="4.5" height="26.0" fill="#873f4f"/>
 <rect data-conditional-bar="0-down_25-down_25" x="211.5" y="610.0" width="21.5" height="26.0" fill="#d16b5a"/>
 <rect data-conditional-bar="0-down_25-unchanged" x="233.1" y="610.0" width="191.7" height="26.0" fill="#c8b978"/>
-<text x="328.9" y="627.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">45.6%</text>
+<text x="329.0" y="627.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">45.6%</text>
 <rect data-conditional-bar="0-down_25-up_25" x="424.8" y="610.0" width="196.6" height="26.0" fill="#5d9fa1"/>
 <text x="523.1" y="627.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">46.8%</text>
 <rect data-conditional-bar="0-down_25-up_50plus" x="621.4" y="610.0" width="5.6" height="26.0" fill="#4fc694"/>
@@ -136,7 +136,7 @@
 <rect data-conditional-bar="0-up_25-down_50plus" x="207.0" y="718.0" width="3.5" height="26.0" fill="#873f4f"/>
 <rect data-conditional-bar="0-up_25-down_25" x="210.5" y="718.0" width="18.9" height="26.0" fill="#d16b5a"/>
 <rect data-conditional-bar="0-up_25-unchanged" x="229.4" y="718.0" width="185.0" height="26.0" fill="#c8b978"/>
-<text x="321.9" y="735.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">44.0%</text>
+<text x="321.9" y="735.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">44.1%</text>
 <rect data-conditional-bar="0-up_25-up_25" x="414.4" y="718.0" width="206.3" height="26.0" fill="#5d9fa1"/>
 <text x="517.5" y="735.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">49.1%</text>
 <rect data-conditional-bar="0-up_25-up_50plus" x="620.7" y="718.0" width="6.3" height="26.0" fill="#4fc694"/>
@@ -146,64 +146,64 @@
 <rect data-conditional-bar="0-up_50plus-down_25" x="210.2" y="772.0" width="17.8" height="26.0" fill="#d16b5a"/>
 <rect data-conditional-bar="0-up_50plus-unchanged" x="228.0" y="772.0" width="181.9" height="26.0" fill="#c8b978"/>
 <text x="319.0" y="789.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">43.3%</text>
-<rect data-conditional-bar="0-up_50plus-up_25" x="410.0" y="772.0" width="210.3" height="26.0" fill="#5d9fa1"/>
+<rect data-conditional-bar="0-up_50plus-up_25" x="410.0" y="772.0" width="210.4" height="26.0" fill="#5d9fa1"/>
 <text x="515.2" y="789.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">50.1%</text>
 <rect data-conditional-bar="0-up_50plus-up_50plus" x="620.3" y="772.0" width="6.7" height="26.0" fill="#4fc694"/>
 <rect x="720" y="490" width="620" height="330" rx="9" fill="#eef2f5"/>
 <text x="740" y="522" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">2026-12-09 -> 2027-01-27</text>
 <rect x="740" y="550" width="112" height="38" rx="6" fill="#873f4f"/>
 <text x="796" y="574" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#ffffff">-50+ BP</text>
-<rect data-conditional-bar="1-down_50plus-down_50plus" x="872.0" y="556.0" width="28.4" height="26.0" fill="#873f4f"/>
-<rect data-conditional-bar="1-down_50plus-down_25" x="900.4" y="556.0" width="72.3" height="26.0" fill="#d16b5a"/>
-<text x="936.5" y="573.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">17.2%</text>
-<rect data-conditional-bar="1-down_50plus-unchanged" x="972.7" y="556.0" width="243.3" height="26.0" fill="#c8b978"/>
-<text x="1094.3" y="573.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">57.9%</text>
-<rect data-conditional-bar="1-down_50plus-up_25" x="1215.9" y="556.0" width="69.5" height="26.0" fill="#5d9fa1"/>
+<rect data-conditional-bar="1-down_50plus-down_50plus" x="872.0" y="556.0" width="28.6" height="26.0" fill="#873f4f"/>
+<rect data-conditional-bar="1-down_50plus-down_25" x="900.6" y="556.0" width="72.3" height="26.0" fill="#d16b5a"/>
+<text x="936.8" y="573.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">17.2%</text>
+<rect data-conditional-bar="1-down_50plus-unchanged" x="972.9" y="556.0" width="243.1" height="26.0" fill="#c8b978"/>
+<text x="1094.4" y="573.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">57.9%</text>
+<rect data-conditional-bar="1-down_50plus-up_25" x="1216.0" y="556.0" width="69.4" height="26.0" fill="#5d9fa1"/>
 <text x="1250.7" y="573.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">16.5%</text>
 <rect data-conditional-bar="1-down_50plus-up_50plus" x="1285.4" y="556.0" width="6.6" height="26.0" fill="#4fc694"/>
 <rect x="740" y="604" width="112" height="38" rx="6" fill="#d16b5a"/>
 <text x="796" y="628" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#ffffff">-25 BP</text>
-<rect data-conditional-bar="1-down_25-down_50plus" x="872.0" y="610.0" width="23.9" height="26.0" fill="#873f4f"/>
-<rect data-conditional-bar="1-down_25-down_25" x="895.9" y="610.0" width="66.6" height="26.0" fill="#d16b5a"/>
-<text x="929.2" y="627.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">15.9%</text>
-<rect data-conditional-bar="1-down_25-unchanged" x="962.5" y="610.0" width="245.0" height="26.0" fill="#c8b978"/>
-<text x="1085.0" y="627.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">58.3%</text>
-<rect data-conditional-bar="1-down_25-up_25" x="1207.6" y="610.0" width="76.5" height="26.0" fill="#5d9fa1"/>
+<rect data-conditional-bar="1-down_25-down_50plus" x="872.0" y="610.0" width="24.1" height="26.0" fill="#873f4f"/>
+<rect data-conditional-bar="1-down_25-down_25" x="896.1" y="610.0" width="66.6" height="26.0" fill="#d16b5a"/>
+<text x="929.4" y="627.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">15.9%</text>
+<rect data-conditional-bar="1-down_25-unchanged" x="962.7" y="610.0" width="244.9" height="26.0" fill="#c8b978"/>
+<text x="1085.2" y="627.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">58.3%</text>
+<rect data-conditional-bar="1-down_25-up_25" x="1207.6" y="610.0" width="76.4" height="26.0" fill="#5d9fa1"/>
 <text x="1245.8" y="627.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">18.2%</text>
 <rect data-conditional-bar="1-down_25-up_50plus" x="1284.1" y="610.0" width="7.9" height="26.0" fill="#4fc694"/>
 <rect x="740" y="658" width="112" height="38" rx="6" fill="#c8b978"/>
 <text x="796" y="682" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#ffffff">0 BP</text>
-<rect data-conditional-bar="1-unchanged-down_50plus" x="872.0" y="664.0" width="20.1" height="26.0" fill="#873f4f"/>
-<rect data-conditional-bar="1-unchanged-down_25" x="892.1" y="664.0" width="61.1" height="26.0" fill="#d16b5a"/>
-<text x="922.6" y="681.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">14.6%</text>
-<rect data-conditional-bar="1-unchanged-unchanged" x="953.2" y="664.0" width="245.6" height="26.0" fill="#c8b978"/>
-<text x="1076.0" y="681.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">58.5%</text>
-<rect data-conditional-bar="1-unchanged-up_25" x="1198.7" y="664.0" width="83.8" height="26.0" fill="#5d9fa1"/>
+<rect data-conditional-bar="1-unchanged-down_50plus" x="872.0" y="664.0" width="20.3" height="26.0" fill="#873f4f"/>
+<rect data-conditional-bar="1-unchanged-down_25" x="892.3" y="664.0" width="61.1" height="26.0" fill="#d16b5a"/>
+<text x="922.8" y="681.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">14.5%</text>
+<rect data-conditional-bar="1-unchanged-unchanged" x="953.3" y="664.0" width="245.4" height="26.0" fill="#c8b978"/>
+<text x="1076.1" y="681.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">58.4%</text>
+<rect data-conditional-bar="1-unchanged-up_25" x="1198.8" y="664.0" width="83.7" height="26.0" fill="#5d9fa1"/>
 <text x="1240.6" y="681.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">19.9%</text>
 <rect data-conditional-bar="1-unchanged-up_50plus" x="1282.5" y="664.0" width="9.5" height="26.0" fill="#4fc694"/>
 <rect x="740" y="712" width="112" height="38" rx="6" fill="#5d9fa1"/>
 <text x="796" y="736" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#ffffff">+25 BP</text>
-<rect data-conditional-bar="1-up_25-down_50plus" x="872.0" y="718.0" width="16.8" height="26.0" fill="#873f4f"/>
-<rect data-conditional-bar="1-up_25-down_25" x="888.8" y="718.0" width="55.8" height="26.0" fill="#d16b5a"/>
-<text x="916.7" y="735.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">13.3%</text>
-<rect data-conditional-bar="1-up_25-unchanged" x="944.5" y="718.0" width="244.9" height="26.0" fill="#c8b978"/>
-<text x="1067.0" y="735.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">58.3%</text>
-<rect data-conditional-bar="1-up_25-up_25" x="1189.4" y="718.0" width="91.3" height="26.0" fill="#5d9fa1"/>
+<rect data-conditional-bar="1-up_25-down_50plus" x="872.0" y="718.0" width="16.9" height="26.0" fill="#873f4f"/>
+<rect data-conditional-bar="1-up_25-down_25" x="888.9" y="718.0" width="55.8" height="26.0" fill="#d16b5a"/>
+<text x="916.8" y="735.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">13.3%</text>
+<rect data-conditional-bar="1-up_25-unchanged" x="944.7" y="718.0" width="244.8" height="26.0" fill="#c8b978"/>
+<text x="1067.1" y="735.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">58.3%</text>
+<rect data-conditional-bar="1-up_25-up_25" x="1189.5" y="718.0" width="91.2" height="26.0" fill="#5d9fa1"/>
 <text x="1235.1" y="735.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">21.7%</text>
 <rect data-conditional-bar="1-up_25-up_50plus" x="1280.7" y="718.0" width="11.3" height="26.0" fill="#4fc694"/>
 <rect x="740" y="766" width="112" height="38" rx="6" fill="#4fc694"/>
 <text x="796" y="790" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#ffffff">+50+ BP</text>
-<rect data-conditional-bar="1-up_50plus-down_50plus" x="872.0" y="772.0" width="13.9" height="26.0" fill="#873f4f"/>
-<rect data-conditional-bar="1-up_50plus-down_25" x="885.9" y="772.0" width="50.7" height="26.0" fill="#d16b5a"/>
-<text x="911.3" y="789.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">12.1%</text>
-<rect data-conditional-bar="1-up_50plus-unchanged" x="936.6" y="772.0" width="243.0" height="26.0" fill="#c8b978"/>
-<text x="1058.2" y="789.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">57.9%</text>
+<rect data-conditional-bar="1-up_50plus-down_50plus" x="872.0" y="772.0" width="14.1" height="26.0" fill="#873f4f"/>
+<rect data-conditional-bar="1-up_50plus-down_25" x="886.1" y="772.0" width="50.7" height="26.0" fill="#d16b5a"/>
+<text x="911.4" y="789.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">12.1%</text>
+<rect data-conditional-bar="1-up_50plus-unchanged" x="936.8" y="772.0" width="243.0" height="26.0" fill="#c8b978"/>
+<text x="1058.2" y="789.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#182737">57.8%</text>
 <rect data-conditional-bar="1-up_50plus-up_25" x="1179.7" y="772.0" width="98.9" height="26.0" fill="#5d9fa1"/>
-<text x="1229.1" y="789.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">23.6%</text>
+<text x="1229.2" y="789.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#ffffff">23.5%</text>
 <rect data-conditional-bar="1-up_50plus-up_50plus" x="1278.6" y="772.0" width="13.4" height="26.0" fill="#4fc694"/>
 <text x="55" y="865" font-family="system-ui, sans-serif" font-size="16" font-weight="650" fill="#182737">3 · Model discipline</text>
 <text x="55" y="898" font-family="system-ui, sans-serif" font-size="12" fill="#596777">Persistent-stance strength 0.35 · decay 0.70 · terminal-consistency sigma 100 bp</text>
-<text x="55" y="922" font-family="system-ui, sans-serif" font-size="12" fill="#596777">Iterative proportional fitting converged in 6 iterations; maximum marginal error 1.66e-12.</text>
+<text x="55" y="922" font-family="system-ui, sans-serif" font-size="12" fill="#596777">Iterative proportional fitting converged in 6 iterations; maximum marginal error 1.64e-12.</text>
 <text x="55" y="954" font-family="system-ui, sans-serif" font-size="12" fill="#182737">Observed:</text>
 <text x="126" y="954" font-family="system-ui, sans-serif" font-size="12" fill="#596777">five exact action marginals at each meeting and the terminal marginal.</text>
 <text x="55" y="978" font-family="system-ui, sans-serif" font-size="12" fill="#182737">Modeled:</text>
