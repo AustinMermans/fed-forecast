@@ -14,4 +14,4 @@
 
 The two artifact findings were implemented. The operational finding remains the final external launch gate.
 
-**Gate after artifact changes:** P0=0 · P1=1 (publication pending) · P2=0 · P3=0
+**Gate after launch verification:** P0=0 · P1=0 · P2=0 · P3=0
