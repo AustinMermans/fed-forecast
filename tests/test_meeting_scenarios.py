@@ -132,6 +132,18 @@ class MeetingScenarioTests(unittest.TestCase):
         self.assertAlmostEqual(december_hold["representative_target_upper"], december_hold["conditional_terminal_expected_upper"])
         self.assertAlmostEqual(january_hold["representative_target_upper"], december_hold["representative_target_upper"])
 
+        december_triple_hike = next(item for item in tree["nodes"] if item["node_id"] == "up_50plus_up_50plus_up_50plus")
+        january_fourth_hike = next(item for item in tree["nodes"] if item["node_id"] == "up_50plus_up_50plus_up_50plus_up_50plus")
+        self.assertAlmostEqual(december_triple_hike["action_implied_target_upper"], 5.25)
+        self.assertLess(
+            december_triple_hike["representative_target_upper"],
+            december_triple_hike["action_implied_target_upper"],
+        )
+        self.assertAlmostEqual(
+            january_fourth_hike["action_implied_target_upper"],
+            january_fourth_hike["representative_target_upper"],
+        )
+
     def test_payload_is_finite_and_svg_has_all_bars_and_next_meeting_scenarios(self) -> None:
         result = self.result()
 

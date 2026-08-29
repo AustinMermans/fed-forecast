@@ -150,6 +150,7 @@ def _compact_tree(payload: dict[str, Any]) -> dict[str, Any]:
                 "path": node["realized_path"],
                 "probability": node["path_probability"],
                 "rate": node["representative_target_upper"],
+                "action_rate": node.get("action_implied_target_upper", node["representative_target_upper"]),
                 "next_date": node["next_meeting_date"],
                 "next": node["next_probabilities"],
                 "branches": node["branches"],
@@ -159,10 +160,48 @@ def _compact_tree(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _ensure_action_rates(policy: dict[str, Any]) -> dict[str, Any]:
+    """Upgrade archived compact trees without hiding a terminal-date action."""
+    tree = policy.get("tree")
+    meetings = policy.get("meetings")
+    terminal = policy.get("terminal_anchor")
+    if not isinstance(tree, dict) or not isinstance(meetings, list) or not isinstance(terminal, dict):
+        return policy
+    nodes = tree.get("nodes")
+    if not isinstance(nodes, list):
+        return policy
+    by_id = {str(node.get("id")): node for node in nodes if isinstance(node, dict)}
+    terminal_date = str(terminal.get("date"))
+    baseline = float(policy["target_upper_bound_baseline"])
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        node.setdefault("action_rate", node.get("rate"))
+        depth = int(node.get("depth", 0))
+        if not depth or depth > len(meetings) or str(meetings[depth - 1].get("date")) != terminal_date:
+            continue
+        cursor = by_id.get(str(tree.get("root", "root")))
+        action_bp = 0.0
+        for category in node.get("path", []):
+            if not isinstance(cursor, dict):
+                break
+            branch = next(
+                (item for item in cursor.get("branches", []) if item.get("category") == category),
+                None,
+            )
+            if not isinstance(branch, dict):
+                break
+            action_bp += float(branch["representative_action_bp"])
+            cursor = by_id.get(str(branch.get("child_node_id")))
+        else:
+            node["action_rate"] = baseline + action_bp / 100.0
+    return policy
+
+
 def _compact_policy(
     payload: dict[str, Any], activity_by_slug: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    return {
+    return _ensure_action_rates({
         "target_upper_bound_baseline": payload["target_upper_bound_baseline"],
         "effective_rate_baseline": payload["effective_rate_baseline"],
         "meetings": _compact_meetings(payload, activity_by_slug),
@@ -170,7 +209,7 @@ def _compact_policy(
         "tree": _compact_tree(payload),
         "historical_diagnostic": _compact_historical_diagnostic(payload.get("historical_transition_diagnostic")),
         "source_urls": payload["source_urls"],
-    }
+    })
 
 
 def _compact_historical_diagnostic(value: object) -> dict[str, Any]:
@@ -763,6 +802,8 @@ def _write_vintages(output: Path, meeting_root: Path, current: dict[str, Any]) -
                 path.unlink()
                 continue
             policy = vintage.get("policy")
+            if isinstance(policy, dict):
+                _ensure_action_rates(policy)
             if isinstance(policy, dict) and "historical_diagnostic" in policy:
                 policy["historical_diagnostic"] = _compact_historical_diagnostic(policy.get("historical_diagnostic"))
                 path.write_text(json.dumps(vintage, sort_keys=True, separators=(",", ":"), allow_nan=False), encoding="utf-8")
@@ -918,6 +959,7 @@ def build(output: Path) -> Path:
         and str(prior_dashboard.get("forecast_generated_at", "")) > str(meeting.get("generated_at", ""))
     )
     current_policy = prior_dashboard["policy"] if prior_is_newer else _compact_policy(meeting, meeting_activity)
+    _ensure_action_rates(current_policy)
     current_policy = _attach_activity(current_policy, meeting_activity)
     current_generated_at = prior_dashboard["forecast_generated_at"] if prior_is_newer else meeting["generated_at"]
     current_snapshot_at = prior_dashboard["snapshot_fetched_at"] if prior_is_newer else meeting["snapshot_fetched_at"]
@@ -937,6 +979,7 @@ def build(output: Path) -> Path:
     if full_tree_vintages and str(full_tree_vintages[-1]["generated_at"]) > str(current_generated_at):
         archived_current = _read_json(output / str(full_tree_vintages[-1]["url"]))
         current_policy = archived_current["policy"]
+        _ensure_action_rates(current_policy)
         current_policy = _attach_activity(current_policy, meeting_activity)
         current_generated_at = archived_current["generated_at"]
         current_snapshot_at = archived_current["snapshot_fetched_at"]

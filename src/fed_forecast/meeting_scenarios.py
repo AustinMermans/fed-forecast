@@ -246,6 +246,15 @@ def _build_conditional_tree(
                 representative_upper = conditional_terminal + sum(after_terminal) / 100.0
             else:
                 representative_upper = config.target_upper_bound + sum(before_or_at_terminal) / 100.0
+            # At the terminal meeting, keep the realized meeting action and the
+            # separately traded terminal-rate constraint as two distinct
+            # quantities.  The interactive chart can then show the action
+            # first and the terminal-market reconciliation as an explicit
+            # bridge instead of making (for example) a +50 bp action look like
+            # a rate cut.
+            action_implied_upper = representative_upper
+            if depth and meeting_dates[depth - 1] == terminal_date:
+                action_implied_upper = config.target_upper_bound + sum(before_or_at_terminal) / 100.0
             next_probabilities = None
             branches: list[dict[str, object]] = []
             if depth < len(meeting_rows):
@@ -271,6 +280,7 @@ def _build_conditional_tree(
                 "next_meeting_date": None if depth == len(meeting_rows) else meeting_rows[depth]["date"],
                 "next_probabilities": next_probabilities,
                 "conditional_terminal_expected_upper": conditional_terminal,
+                "action_implied_target_upper": action_implied_upper,
                 "representative_target_upper": representative_upper,
                 "branches": branches,
             })

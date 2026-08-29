@@ -14,6 +14,40 @@ SPEC.loader.exec_module(MODULE)
 
 
 class ForecastReplayTests(unittest.TestCase):
+    def test_compact_tree_keeps_action_and_terminal_anchor_rates_separate(self) -> None:
+        compact = MODULE._compact_tree({
+            "conditional_tree": {
+                "root_node_id": "root", "node_count": 1, "leaf_count": 1,
+                "quoted_marginals_preserved": True, "settings": {},
+                "nodes": [{
+                    "node_id": "root", "depth": 0, "realized_path": [], "path_probability": 1.0,
+                    "representative_target_upper": 4.0, "action_implied_target_upper": 5.25,
+                    "next_meeting_date": None, "next_probabilities": None, "branches": [],
+                }],
+            },
+        })
+        self.assertEqual(compact["nodes"][0]["rate"], 4.0)
+        self.assertEqual(compact["nodes"][0]["action_rate"], 5.25)
+
+    def test_legacy_tree_reconstructs_terminal_action_before_anchor_reset(self) -> None:
+        policy = {
+            "target_upper_bound_baseline": 3.75,
+            "terminal_anchor": {"date": "2026-12-09"},
+            "meetings": [{"date": "2026-09-16"}, {"date": "2026-10-28"}, {"date": "2026-12-09"}],
+            "tree": {
+                "root": "root",
+                "nodes": [
+                    {"id": "root", "depth": 0, "path": [], "rate": 3.75, "branches": [{"category": "up_50plus", "representative_action_bp": 50.0, "child_node_id": "a"}]},
+                    {"id": "a", "depth": 1, "path": ["up_50plus"], "rate": 4.25, "branches": [{"category": "up_50plus", "representative_action_bp": 50.0, "child_node_id": "b"}]},
+                    {"id": "b", "depth": 2, "path": ["up_50plus", "up_50plus"], "rate": 4.75, "branches": [{"category": "up_50plus", "representative_action_bp": 50.0, "child_node_id": "c"}]},
+                    {"id": "c", "depth": 3, "path": ["up_50plus", "up_50plus", "up_50plus"], "rate": 4.02, "branches": []},
+                ],
+            },
+        }
+        MODULE._ensure_action_rates(policy)
+        self.assertEqual(policy["tree"]["nodes"][-1]["action_rate"], 5.25)
+        self.assertEqual(policy["tree"]["nodes"][-1]["rate"], 4.02)
+
     def test_forward_chart_keeps_event_rules_off_the_plot(self) -> None:
         dashboard = (SCRIPT.parents[1] / "site" / "assets" / "dashboard.js").read_text(encoding="utf-8")
         self.assertNotIn('class: "event-line"', dashboard)
