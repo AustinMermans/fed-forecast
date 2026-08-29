@@ -23,9 +23,9 @@ provenance, cross-market consistency audit, and small-sample forecast scores.
 - The separately traded year-end target-rate distribution is retained as an
   independent market view. Any difference from cumulative meeting actions is
   shown as disagreement, not an additional Fed move.
-- The conditional tree uses a persistence and terminal-consistency kernel,
-  followed by iterative proportional fitting. Its transitions are modeled;
-  the input marginals are quoted.
+- The conditional tree uses a meeting-only persistence kernel followed by
+  iterative proportional fitting. Its transitions are modeled; the meeting
+  marginals are quoted. The year-end market never constrains the action path.
 - Historical daily marks are reconstructed and labeled. Contemporary
   snapshots are archived four times per day. The realized target path is
   added afterward for comparison.

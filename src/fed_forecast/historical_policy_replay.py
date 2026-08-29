@@ -157,33 +157,9 @@ def forward_fan(
             rate = baseline + move / 100.0
             distribution[rate] = distribution.get(rate, 0.0) + weight
         output.append({"date": str(meeting["date"]), "kind": "meeting", **_summary(distribution)})
-    if terminal is not None:
-        native_terminal = terminal.get("native_outcomes")
-        terminal_date = str(terminal.get("date"))
-        if not isinstance(native_terminal, list) or not native_terminal or not terminal_date:
-            raise ValueError("terminal surface is malformed")
-        terminal_rates = tuple(float(item["representative_rate"]) for item in native_terminal)
-        terminal_probabilities = tuple(float(item["probability"]) for item in native_terminal)
-        terminal_total = sum(terminal_probabilities)
-        terminal_probabilities = tuple(value / terminal_total for value in terminal_probabilities)
-        terminal_distribution = dict(zip(terminal_rates, terminal_probabilities, strict=True))
-        output = [item for item in output if item["date"] != terminal_date]
-        output.append({"date": terminal_date, "kind": "terminal", **_summary(terminal_distribution)})
-        for horizon, meeting in enumerate(meetings):
-            if str(meeting["date"]) <= terminal_date:
-                continue
-            distribution: dict[float, float] = {}
-            for path_weight, state in zip(weights, states, strict=True):
-                move = sum(
-                    actions[index][state[index]]
-                    for index in range(horizon + 1)
-                    if str(meetings[index]["date"]) > terminal_date
-                )
-                for terminal_rate, terminal_probability in zip(terminal_rates, terminal_probabilities, strict=True):
-                    rate = terminal_rate + move / 100.0
-                    distribution[rate] = distribution.get(rate, 0.0) + path_weight * terminal_probability
-            output = [item for item in output if item["date"] != str(meeting["date"])]
-            output.append({"date": str(meeting["date"]), "kind": "meeting", **_summary(distribution)})
+    # ``terminal`` is accepted for backward-compatible archive construction,
+    # but deliberately does not alter the meeting-action fan. The independently
+    # traded year-end level belongs in a separate comparison series.
     return sorted(output, key=lambda item: (str(item["date"]), str(item["kind"])))
 
 

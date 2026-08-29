@@ -57,14 +57,14 @@
       <div class="method-copy">
         <p class="chart-kicker">WHAT IS MODELED</p>
         <h2>Marginals do not identify a path</h2>
-        <p>Meeting markets tell us the probability of each action at each date, but not questions such as “if September hikes, what happens to October?” The current tree starts with an assumed persistence kernel: similar policy stances receive more joint weight, and that influence decays with meeting distance. A second soft constraint favors paths closer to the separately traded year-end rate distribution.</p>
-        <p>Iterative proportional fitting then adjusts the joint weights until every quoted meeting marginal and every year-end rate bucket is recovered. This guarantees marginal consistency; it does not make the conditional transitions observed or uniquely identified.</p>
+        <p>Meeting markets tell us the probability of each action at each date, but not questions such as “if September hikes, what happens to October?” The current tree starts with an assumed persistence kernel: similar policy stances receive more joint weight, and that influence decays with meeting distance. No constraint pulls those discrete paths toward the separately traded year-end rate distribution.</p>
+        <p>Iterative proportional fitting then adjusts the joint weights until every quoted meeting marginal is recovered. This guarantees meeting-marginal consistency; it does not make the conditional transitions observed or uniquely identified.</p>
         <div class="model-cards">
-          <div><span>OBSERVED</span><b>Meeting and year-end marginals</b><p>Normalized from quoted contracts.</p></div>
-          <div><span>ASSUMED</span><b>Persistence and terminal-consistency kernels</b><p>Scenario parameters, not historically estimated coefficients.</p></div>
-          <div><span>ENFORCED</span><b>Marginal recovery by IPF</b><p>The joint distribution returns to every input marginal.</p></div>
+          <div><span>OBSERVED</span><b>Meeting marginals</b><p>Normalized from quoted action contracts.</p></div>
+          <div><span>ASSUMED</span><b>Persistence kernel</b><p>A scenario parameter, not a historically estimated coefficient.</p></div>
+          <div><span>ENFORCED</span><b>Meeting-marginal recovery by IPF</b><p>The joint distribution returns to every meeting input.</p></div>
         </div>
-        <p>The fan now computes quantiles from the full conditional terminal-rate distribution at each branch. It does not substitute branch-level conditional means for rate outcomes. Connected medians are pointwise quantiles, not necessarily one jointly realizable path.</p>
+        <p>The fan computes quantiles across complete meeting-action paths. A selected orange branch is always jointly realizable on the modeled −50/−25/0/+25/+50 bp lattice. The connected cyan medians are pointwise quantiles and need not themselves form one realized path.</p>
       </div>
     </section>
 
@@ -75,7 +75,7 @@
         <h2>The December action market and year-end rate market can disagree</h2>
         <p>The cumulative meeting-action path and the 15-bucket year-end rate distribution are independently traded. Preserving both does not make their levels economically identical. The site displays their difference as a cross-market gap—not as an extra Fed move between the December meeting and year-end.</p>
         <div class="coherence method-coherence" id="method-coherence"></div>
-        <p>A stricter future version could reconcile the two subject to bid/ask and liquidity-weighted uncertainty. Today’s version keeps both quotes intact so that disagreement remains visible rather than silently moving either market.</p>
+        <p>The site deliberately does not force a reconciliation. It keeps both quotes intact so that disagreement remains visible rather than silently moving either market or inventing a fractional policy action.</p>
       </div>
     </section>
 

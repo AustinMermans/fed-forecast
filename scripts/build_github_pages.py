@@ -296,41 +296,32 @@ def _five_bucket_path(
     vintage_at: str,
     baseline: float,
     meetings: list[dict[str, Any]],
-    terminal: dict[str, Any],
-    terminal_rates: dict[str, float],
-    terminal_date: str,
     settings: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Return a five-state marginal-preserving forward rate fan.
+    """Return a meeting-action-only, marginal-preserving forward rate fan.
 
-    The quoted five-bucket meeting and terminal marginals remain exact. A
-    persistent stance kernel plus terminal consistency supplies cross-meeting
-    dependence, and iterative proportional fitting restores every marginal.
+    The quoted five-bucket meeting marginals remain exact. A persistent stance
+    kernel supplies cross-meeting dependence and iterative proportional fitting
+    restores every marginal. The year-end level market is intentionally not a
+    state variable or endpoint constraint.
     """
     meeting_dates = [str(item["date"]) for item in meetings]
     meeting_probabilities = [tuple(float(price["probability"]) for price in item["prices"]) for item in meetings]
-    labels = list(terminal_rates)
-    terminal_probabilities = tuple(float(terminal["probabilities"][label]) for label in labels)
-    rates = tuple(terminal_rates[label] for label in labels)
     paths = list(product(range(5), repeat=len(meetings)))
-    states = [(path, terminal_index) for path in paths for terminal_index in range(len(rates))]
     strength = float(settings["dependence_strength"])
     decay = float(settings["dependence_decay"])
-    sigma = float(settings["terminal_consistency_sigma_bp"])
     log_kernels = []
-    for path, terminal_index in states:
+    for path in paths:
         persistence = sum(
             decay ** (right - left - 1) * ACTION_SCORES[path[left]] * ACTION_SCORES[path[right]]
             for left in range(len(path))
             for right in range(left + 1, len(path))
         )
-        cumulative = sum(ACTION_BUCKETS_BP[outcome] for index, outcome in enumerate(path) if meeting_dates[index] <= terminal_date)
-        gap_bp = 100.0 * (baseline + cumulative / 100.0 - rates[terminal_index])
-        log_kernels.append(strength * persistence - 0.5 * (gap_bp / sigma) ** 2)
+        log_kernels.append(strength * persistence)
     maximum = max(log_kernels)
     weights = []
-    for (path, terminal_index), log_kernel in zip(states, log_kernels, strict=True):
-        marginal = terminal_probabilities[terminal_index]
+    for path, log_kernel in zip(paths, log_kernels, strict=True):
+        marginal = 1.0
         for index, outcome in enumerate(path):
             marginal *= meeting_probabilities[index][outcome]
         weights.append(marginal * math.exp(max(-700.0, log_kernel - maximum)))
@@ -338,25 +329,25 @@ def _five_bucket_path(
     if total <= 0:
         raise ValueError("five-bucket path has zero support")
     weights = [value / total for value in weights]
-    targets = meeting_probabilities + [terminal_probabilities]
+    targets = meeting_probabilities
     tolerance = float(settings["rake_tolerance"])
     for _ in range(int(settings["rake_max_iterations"])):
         for dimension, target in enumerate(targets):
-            size = 5 if dimension < len(meetings) else len(rates)
+            size = 5
             totals = [0.0] * size
-            for state_index, (path, terminal_index) in enumerate(states):
-                category = path[dimension] if dimension < len(meetings) else terminal_index
+            for state_index, path in enumerate(paths):
+                category = path[dimension]
                 totals[category] += weights[state_index]
             factors = [target[index] / totals[index] if totals[index] else 0.0 for index in range(size)]
-            for state_index, (path, terminal_index) in enumerate(states):
-                category = path[dimension] if dimension < len(meetings) else terminal_index
+            for state_index, path in enumerate(paths):
+                category = path[dimension]
                 weights[state_index] *= factors[category]
         maximum_error = 0.0
         for dimension, target in enumerate(targets):
-            size = 5 if dimension < len(meetings) else len(rates)
+            size = 5
             totals = [0.0] * size
-            for state_index, (path, terminal_index) in enumerate(states):
-                category = path[dimension] if dimension < len(meetings) else terminal_index
+            for state_index, path in enumerate(paths):
+                category = path[dimension]
                 totals[category] += weights[state_index]
             maximum_error = max(maximum_error, *(abs(totals[index] - target[index]) for index in range(size)))
         if maximum_error <= tolerance:
@@ -368,23 +359,76 @@ def _five_bucket_path(
     output = [{"date": vintage_date, "kind": "vintage", **_rate_summary([(baseline, 1.0)])}]
     for horizon, meeting_date in enumerate(meeting_dates):
         distribution: dict[float, float] = {}
-        for weight, (path, terminal_index) in zip(weights, states, strict=True):
-            if meeting_date < terminal_date:
-                value = baseline + sum(ACTION_BUCKETS_BP[path[index]] for index in range(horizon + 1)) / 100.0
-            elif meeting_date == terminal_date:
-                value = rates[terminal_index]
-            else:
-                after_terminal = sum(
-                    ACTION_BUCKETS_BP[path[index]]
-                    for index in range(horizon + 1)
-                    if meeting_dates[index] > terminal_date
-                )
-                value = rates[terminal_index] + after_terminal / 100.0
+        for weight, path in zip(weights, paths, strict=True):
+            value = baseline + sum(ACTION_BUCKETS_BP[path[index]] for index in range(horizon + 1)) / 100.0
             distribution[value] = distribution.get(value, 0.0) + weight
         output.append({"date": meeting_date, "kind": "meeting", **_rate_summary(list(distribution.items()))})
-    if terminal_date not in meeting_dates:
-        output.append({"date": terminal_date, "kind": "terminal", **_rate_summary(list(zip(rates, terminal_probabilities, strict=True)))})
     return sorted(output, key=lambda item: (item["date"], item["kind"]))
+
+
+def _native_meeting_path(
+    *, vintage_at: str, baseline: float, meetings: list[dict[str, Any]], settings: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Rebuild historical fans from native meeting actions only."""
+    if not meetings:
+        raise ValueError("native meeting path needs at least one meeting")
+    actions: list[tuple[float, ...]] = []
+    marginals: list[tuple[float, ...]] = []
+    for meeting in meetings:
+        native = meeting.get("native_outcomes")
+        if not isinstance(native, list) or not native:
+            raise ValueError("historical meeting is missing native outcomes")
+        action = tuple(float(item["representative_bp"]) for item in native)
+        probabilities = tuple(float(item["probability"]) for item in native)
+        total = sum(probabilities)
+        if total <= 0 or any(value < 0 or not math.isfinite(value) for value in probabilities):
+            raise ValueError("historical meeting probabilities are invalid")
+        actions.append(action)
+        marginals.append(tuple(value / total for value in probabilities))
+    paths = list(product(*(range(len(values)) for values in actions)))
+    strength = float(settings["dependence_strength"])
+    decay = float(settings["dependence_decay"])
+    weights = []
+    for path in paths:
+        marginal = math.prod(marginals[index][outcome] for index, outcome in enumerate(path))
+        persistence = sum(
+            decay ** (right - left - 1)
+            * max(-1.5, min(1.5, actions[left][path[left]] / 50.0))
+            * max(-1.5, min(1.5, actions[right][path[right]] / 50.0))
+            for left in range(len(path))
+            for right in range(left + 1, len(path))
+        )
+        weights.append(marginal * math.exp(max(-700.0, strength * persistence)))
+    total = sum(weights)
+    weights = [value / total for value in weights]
+    tolerance = float(settings["rake_tolerance"])
+    for _ in range(int(settings["rake_max_iterations"])):
+        for dimension, target in enumerate(marginals):
+            totals = [0.0] * len(target)
+            for path_index, path in enumerate(paths):
+                totals[path[dimension]] += weights[path_index]
+            factors = [target[index] / value if value else 0.0 for index, value in enumerate(totals)]
+            for path_index, path in enumerate(paths):
+                weights[path_index] *= factors[path[dimension]]
+        maximum_error = 0.0
+        for dimension, target in enumerate(marginals):
+            totals = [0.0] * len(target)
+            for path_index, path in enumerate(paths):
+                totals[path[dimension]] += weights[path_index]
+            maximum_error = max(maximum_error, *(abs(a - b) for a, b in zip(totals, target, strict=True)))
+        if maximum_error <= tolerance:
+            break
+    else:
+        raise ValueError(f"native meeting path raking did not converge: {maximum_error:.3g}")
+    vintage_date = datetime.fromisoformat(vintage_at.replace("Z", "+00:00")).astimezone(ZoneInfo("America/New_York")).date().isoformat()
+    output = [{"date": vintage_date, "kind": "vintage", **_rate_summary([(baseline, 1.0)])}]
+    for horizon, meeting in enumerate(meetings):
+        distribution: dict[float, float] = {}
+        for weight, path in zip(weights, paths, strict=True):
+            rate = baseline + sum(actions[index][path[index]] for index in range(horizon + 1)) / 100.0
+            distribution[rate] = distribution.get(rate, 0.0) + weight
+        output.append({"date": str(meeting["date"]), "kind": "meeting", **_rate_summary(list(distribution.items()))})
+    return output
 
 
 def _compact_replay_meetings(meetings: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -419,12 +463,11 @@ def _replay_vintage(
     settings: dict[str, Any],
 ) -> dict[str, Any]:
     meetings = payload["meeting_distributions"] if "meeting_distributions" in payload else payload["meetings"]
-    terminal = payload["terminal"] if "terminal" in payload else payload["terminal_anchor"]
     baseline = float(payload["target_upper_bound_baseline"])
     return {
         "generated_at": payload["generated_at"],
         "kind": kind,
-        "model_version": "structural-terminal-ipf-v1",
+        "model_version": "structural-meeting-ipf-v2",
         "label": label,
         "event": event,
         "baseline_target_upper": baseline,
@@ -432,9 +475,6 @@ def _replay_vintage(
             vintage_at=payload["generated_at"],
             baseline=baseline,
             meetings=meetings,
-            terminal=terminal,
-            terminal_rates=terminal_rates,
-            terminal_date=terminal_date,
             settings=settings,
         ),
         "meetings": _compact_replay_meetings(meetings),
@@ -449,7 +489,7 @@ def _replay_preference(item: dict[str, Any]) -> tuple[int, int, int, str]:
     return full_tree, len(item.get("meetings", [])), kind_rank, str(item.get("generated_at", ""))
 
 
-def _annotate_historical_vintage(candidate: dict[str, Any]) -> dict[str, Any]:
+def _annotate_historical_vintage(candidate: dict[str, Any], settings: dict[str, Any]) -> dict[str, Any]:
     """Attach the information-set evidence used by the public replay."""
     generated = _timestamp_number(str(candidate["generated_at"]))
     meetings = []
@@ -465,17 +505,26 @@ def _annotate_historical_vintage(candidate: dict[str, Any]) -> dict[str, Any]:
         meeting["source_kind"] = "polymarket_clob_price_history"
         meeting["quote_age_seconds"] = max(0.0, age)
         meetings.append(meeting)
-    has_terminal = any(
+    had_terminal_quote = any(
         isinstance(point, dict) and point.get("kind") == "terminal"
         for point in candidate.get("horizon", [])
     )
+    coverage = {
+        **(candidate.get("coverage") if isinstance(candidate.get("coverage"), dict) else {}),
+        "anchor": "meeting_markets_only",
+        "independent_terminal_available": had_terminal_quote,
+    }
     return {
         **candidate,
         "meetings": meetings,
-        "model_version": (
-            "historical-native-terminal-v1" if has_terminal
-            else "historical-native-meeting-v1"
+        "coverage": coverage,
+        "horizon": _native_meeting_path(
+            vintage_at=str(candidate["generated_at"]),
+            baseline=float(candidate["baseline_target_upper"]),
+            meetings=meetings,
+            settings=settings,
         ),
+        "model_version": "historical-native-meeting-v2",
     }
 
 
@@ -504,11 +553,11 @@ def _forecast_replay(
     if historical_path.exists():
         try:
             historical = _read_json(historical_path)
-            historical_disclosure = historical.get("disclosure")
+            historical_disclosure = "Daily CLOB price-history marks are normalized within each mutually exclusive FOMC event. Native meeting-action magnitudes are retained. Historical year-end level quotes, when available, remain independent and do not reset the action fan."
             candidates = {stamp: item for stamp, item in candidates.items() if item.get("kind") != "historical_daily"}
             for candidate in historical.get("vintages", []):
                 if isinstance(candidate, dict) and isinstance(candidate.get("generated_at"), str):
-                    candidates[candidate["generated_at"]] = _annotate_historical_vintage(candidate)
+                    candidates[candidate["generated_at"]] = _annotate_historical_vintage(candidate, settings)
         except (ValueError, TypeError, json.JSONDecodeError):
             pass
     fed_payloads: list[dict[str, Any]] = []
@@ -615,9 +664,8 @@ def _forecast_replay(
         "schema_version": 3,
         "method": "versioned marginal-preserving forward fan",
         "model_versions": {
-            "historical-native-meeting-v1": "Native historical meeting buckets with a meeting-only persistence kernel; no terminal-consistency joint.",
-            "historical-native-terminal-v1": "Native historical meeting buckets with a separately quoted terminal endpoint; meeting dependence remains meeting-only and no terminal-consistency joint is fitted.",
-            "structural-terminal-ipf-v1": "Five meeting buckets plus a separately traded terminal-rate marginal, joined by persistence and terminal-consistency kernels and raked to quoted marginals.",
+            "historical-native-meeting-v2": "Native historical meeting-action buckets joined by the same meeting-only persistence model; separately quoted terminal levels remain outside the fan.",
+            "structural-meeting-ipf-v2": "Five quoted meeting-action buckets joined by a persistence kernel and raked back to every meeting marginal; the year-end level market remains an independent comparison.",
         },
         "window_days": REPLAY_WINDOW_DAYS,
         "archive_start": retained[0]["generated_at"],
@@ -626,7 +674,7 @@ def _forecast_replay(
         "meeting_calendar": meeting_calendar,
         "actual_target_upper": actual,
         "events": _read_json(PROJECT_ROOT / "config" / "market_events.json").get("events", []),
-        "disclosure": "Meeting and terminal marginals are quoted markets. Cross-meeting dependence is modeled with a persistent-stance and terminal-consistency kernel, then raked back to every quoted five-outcome marginal. When an intraday collector omits an otherwise observable horizon meeting, its last prior quote is carried forward and explicitly marked instead of dropping the meeting from the replay.",
+        "disclosure": "Meeting and year-end marginals are quoted markets, but only meeting actions enter the forward fan. Cross-meeting dependence is modeled with a persistent-stance kernel, then raked back to every quoted five-outcome meeting marginal. The year-end level remains an independent comparison. When an intraday collector omits an otherwise observable horizon meeting, its last prior quote is carried forward and explicitly marked instead of dropping the meeting from the replay.",
         "historical_disclosure": historical_disclosure,
     }
 

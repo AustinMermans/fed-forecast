@@ -80,15 +80,13 @@ class MeetingScenarioTests(unittest.TestCase):
         self.assertAlmostEqual(up["next_meeting_probabilities_unchanged"]["unchanged"], .62)
         self.assertAlmostEqual(up["next_meeting_probabilities_unchanged"]["up"], .28)
 
-    def test_terminal_anchor_resets_earlier_shocks_but_mechanical_path_does_not(self) -> None:
+    def test_year_end_market_does_not_reset_meeting_action_shocks(self) -> None:
         result = self.result()
         september_down = next(item for item in result["scenarios"] if item["shock_meeting_date"] == "2026-09-16" and item["category"] == "down")
         december_action = next(item for item in september_down["downstream"] if item["date"] == "2026-12-09" and item["kind"] == "meeting_action")
-        terminal_anchor = next(item for item in september_down["downstream"] if item["kind"] == "terminal_anchor")
         january = next(item for item in september_down["downstream"] if item["date"] == "2027-01-27")
         self.assertNotEqual(december_action["anchor_respecting_change_bp"], 0.0)
-        self.assertEqual(terminal_anchor["anchor_respecting_change_bp"], 0.0)
-        self.assertEqual(january["anchor_respecting_change_bp"], 0.0)
+        self.assertAlmostEqual(january["anchor_respecting_change_bp"], september_down["surprise_vs_baseline_bp"])
         self.assertAlmostEqual(january["mechanical_change_bp"], september_down["surprise_vs_baseline_bp"])
 
     def test_conditional_tree_preserves_marginals_and_reprices_future_nodes(self) -> None:
@@ -122,61 +120,20 @@ class MeetingScenarioTests(unittest.TestCase):
         september_up_node = next(item for item in tree["nodes"] if item["node_id"] == "up_25")
         september_hold_node = next(item for item in tree["nodes"] if item["node_id"] == "unchanged")
         self.assertNotEqual(september_up_node["next_probabilities"], september_hold_node["next_probabilities"])
-        self.assertNotAlmostEqual(
-            september_up_node["conditional_terminal_expected_upper"],
-            september_hold_node["conditional_terminal_expected_upper"],
-        )
-
         december_hold = next(item for item in tree["nodes"] if item["node_id"] == "up_25_unchanged_unchanged")
         january_hold = next(item for item in tree["nodes"] if item["node_id"] == "up_25_unchanged_unchanged_unchanged")
-        self.assertAlmostEqual(december_hold["representative_target_upper"], december_hold["conditional_terminal_expected_upper"])
+        self.assertAlmostEqual(december_hold["representative_target_upper"], 4.0)
         self.assertAlmostEqual(january_hold["representative_target_upper"], december_hold["representative_target_upper"])
 
         december_triple_hike = next(item for item in tree["nodes"] if item["node_id"] == "up_50plus_up_50plus_up_50plus")
         january_fourth_hike = next(item for item in tree["nodes"] if item["node_id"] == "up_50plus_up_50plus_up_50plus_up_50plus")
         self.assertAlmostEqual(december_triple_hike["action_implied_target_upper"], 5.25)
-        self.assertLess(
-            december_triple_hike["representative_target_upper"],
-            december_triple_hike["action_implied_target_upper"],
-        )
-        self.assertAlmostEqual(
-            january_fourth_hike["action_implied_target_upper"],
-            january_fourth_hike["representative_target_upper"],
-        )
-        root_terminal = result["terminal_anchor"]["probabilities"]
-        december_nodes = [item for item in tree["nodes"] if item["depth"] == 3]
-        recovered_terminal = {
-            label: sum(
-                float(node["path_probability"]) * float(node["rate_distribution"][index]["probability"])
-                for node in december_nodes
-            )
-            for index, label in enumerate(root_terminal)
-        }
-        for label, probability in root_terminal.items():
-            self.assertAlmostEqual(recovered_terminal[label], probability)
-        self.assertGreater(len(december_hold["rate_distribution"]), 1)
-        terminal_rates = {
-            bucket.label: bucket.representative_rate for bucket in self.config.terminal_buckets
-        }
-        quoted_points = sorted(
-            (terminal_rates[label], probability) for label, probability in root_terminal.items()
-        )
-        tree_points = sorted(
-            (float(point["rate"]), float(node["path_probability"]) * float(point["probability"]))
-            for node in december_nodes for point in node["rate_distribution"]
-        )
-
-        def quantile(points, level):
-            total = sum(weight for _, weight in points)
-            cumulative = 0.0
-            for value, weight in points:
-                cumulative += weight / total
-                if cumulative >= level - 1e-12:
-                    return value
-            return points[-1][0]
-
-        for level in (.05, .5, .95):
-            self.assertEqual(quantile(tree_points, level), quantile(quoted_points, level))
+        self.assertAlmostEqual(december_triple_hike["representative_target_upper"], 5.25)
+        self.assertAlmostEqual(january_fourth_hike["representative_target_upper"], 5.75)
+        for node in tree["nodes"]:
+            self.assertEqual(len(node["rate_distribution"]), 1)
+            self.assertAlmostEqual(node["rate_distribution"][0]["rate"], node["representative_target_upper"])
+            self.assertAlmostEqual(node["rate_distribution"][0]["probability"], 1.0)
 
     def test_payload_is_finite_and_svg_has_all_bars_and_next_meeting_scenarios(self) -> None:
         result = self.result()

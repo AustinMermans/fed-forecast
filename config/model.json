@@ -5,7 +5,6 @@
   "action_representatives_bp": [-50, -25, 0, 25, 50],
   "dependence_strength": 0.35,
   "dependence_decay": 0.7,
-  "terminal_consistency_sigma_bp": 100.0,
   "ipf_tolerance": 1e-10,
   "ipf_max_iterations": 2000,
   "notes": "Quoted marginals are preserved. Cross-meeting dependence is structural, not historically estimated."

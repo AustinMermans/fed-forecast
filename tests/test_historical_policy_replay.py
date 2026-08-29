@@ -78,7 +78,7 @@ class HistoricalPolicyReplayTests(unittest.TestCase):
         self.assertEqual(baseline_for_day(date(2024, 9, 18), decisions), 5.00)
         self.assertEqual(baseline_for_day(date(2024, 10, 1), decisions), 5.00)
 
-    def test_forward_fan_uses_quoted_terminal_and_then_applies_later_action(self) -> None:
+    def test_forward_fan_keeps_quoted_terminal_outside_meeting_path(self) -> None:
         meetings = [
             {"date": "2026-12-09", "native_outcomes": [
                 {"representative_bp": -25, "probability": 0.5},
@@ -94,11 +94,11 @@ class HistoricalPolicyReplayTests(unittest.TestCase):
             {"representative_rate": 4.00, "probability": 0.6},
         ]}
         fan = forward_fan(3.75, meetings, vintage_date="2026-08-01", terminal=terminal)
-        terminal_point = next(item for item in fan if item["date"] == "2026-12-09")
+        december_point = next(item for item in fan if item["date"] == "2026-12-09")
         january_point = next(item for item in fan if item["date"] == "2027-01-27")
-        self.assertEqual(terminal_point["kind"], "terminal")
-        self.assertAlmostEqual(terminal_point["mean"], 3.90)
-        self.assertAlmostEqual(january_point["mean"], 3.9625)
+        self.assertEqual(december_point["kind"], "meeting")
+        self.assertAlmostEqual(december_point["mean"], 3.625)
+        self.assertAlmostEqual(january_point["mean"], 3.6875)
 
 
 if __name__ == "__main__":

@@ -88,7 +88,7 @@
         <aside class="branch-panel"><p id="branch-step" class="branch-step"></p><h3 id="branch-meeting">—</h3><p id="branch-path" class="branch-path"></p><div id="branch-buttons" class="branch-buttons"></div><button id="branch-back" class="back" type="button">← Undo last outcome</button></aside>
         <div class="fan-block"><div class="fan-caption"><span>Target upper bound</span><span id="fan-caption">Weighted path distribution</span></div><svg id="fan-chart" role="img" aria-label="Conditional target-rate fan through Federal Reserve meetings"></svg></div>
       </div>
-      <div class="path-method"><b>Where the model begins</b><p>Every branch is a discrete −50, −25, 0, +25, or +50 bp representative action. At the December terminal date, the solid orange path shows that meeting action; the dashed vertical gap then compares it with the separately traded year-end rate distribution. It is cross-market disagreement, not an additional Fed move. The joint tree preserves all quoted marginals and adds assumed persistence across meetings.</p></div>
+      <div class="path-method"><b>Where the model begins</b><p>Every branch is a discrete −50, −25, 0, +25, or +50 bp representative action. The orange path therefore remains on a quarter-point lattice through every meeting. The separately traded year-end rate distribution is shown in the cross-market comparison above, but it never resets or constrains the selected action path. The tree preserves every quoted meeting marginal and adds assumed persistence across meetings.</p></div>
     </section>
 
     <section class="method" id="method">
@@ -97,13 +97,13 @@
         <div><b>Quoted</b><p>A valid CLOB midpoint is preferred; a contemporaneous Gamma price is a labeled fallback. Five Yes prices are normalized to 100%.</p></div>
         <div><b>Archived</b><p>Each frame uses only observations available by that timestamp. No contract appears before its first quote; held or reconstructed observations are labeled.</p></div>
         <div><b>Translated</b><p>Open-ended tails use ±50 bp for path arithmetic. The chart shows the upper bound of the target range, not EFFR or a fee-adjusted break-even.</p></div>
-        <div><b>Modeled</b><p>The fan preserves quoted marginals with iterative proportional fitting. Cross-meeting dependence is structural. Historical meeting-only and current terminal-anchored regimes are versioned and identified in the replay.</p></div>
+        <div><b>Modeled</b><p>The fan preserves quoted meeting marginals with iterative proportional fitting. Cross-meeting dependence is structural. Historical reconstruction regimes are versioned and identified in the replay.</p></div>
       </div>
       <p class="disclosure">An explanatory research monitor, not a trading recommendation or a full calibration study. Prices omit fees, spread, slippage, and settlement risk. Historical API reconstructions are distinguishable from contemporaneously archived observations. <a href="methodology.html">Read the full methodology and small-sample results →</a></p>
     </section>
   </main>
 
   <footer><span>FED FORECAST / PUBLIC ARCHIVE</span><span id="footer-time">—</span><span class="footer-links"><a href="methodology.html">Methodology ↗</a><a href="data/dashboard.json">Data ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a><a href="https://github.com/AustinMermans/fed-forecast/blob/main/NOTICE.md">Notice ↗</a></span></footer>
-  <script src="assets/dashboard.js?v=conditional-pmf-1" defer></script>
+  <script src="assets/dashboard.js?v=meeting-lattice-2" defer></script>
 </body>
 </html>

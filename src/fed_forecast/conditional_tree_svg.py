@@ -80,8 +80,8 @@ def render_conditional_tree_svg(payload: Mapping[str, object]) -> bytes:
         ))
         _stacked_bar(lines, child["next_probabilities"], 525, y - 8, 350, 24, f"sep-{category}-oct")
         lines.extend((
-            f'<text x="895" y="{y-5:.1f}" font-family="system-ui, sans-serif" font-size="10" fill="#596777">conditional year-end</text>',
-            f'<text x="895" y="{y+13:.1f}" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">{float(child["conditional_terminal_expected_upper"]):.3f}%</text>',
+            f'<text x="895" y="{y-5:.1f}" font-family="system-ui, sans-serif" font-size="10" fill="#596777">action-path level</text>',
+            f'<text x="895" y="{y+13:.1f}" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#182737">{float(child["representative_target_upper"]):.3f}%</text>',
         ))
     lines.extend((
         '<rect x="1030" y="135" width="305" height="252" rx="9" fill="#eef2f5"/>',
@@ -115,10 +115,10 @@ def render_conditional_tree_svg(payload: Mapping[str, object]) -> bytes:
             _stacked_bar(lines, row["next_probabilities"], x0 + 152, y - 16, 420, 26, f"{panel_index}-{category}")
     lines.extend((
         '<text x="55" y="865" font-family="system-ui, sans-serif" font-size="16" font-weight="650" fill="#182737">3 · Model discipline</text>',
-        f'<text x="55" y="898" font-family="system-ui, sans-serif" font-size="12" fill="#596777">Persistent-stance strength {float(tree["settings"]["dependence_strength"]):.2f} · decay {float(tree["settings"]["dependence_decay"]):.2f} · terminal-consistency sigma {float(tree["settings"]["terminal_consistency_sigma_bp"]):.0f} bp</text>',
+        f'<text x="55" y="898" font-family="system-ui, sans-serif" font-size="12" fill="#596777">Persistent-stance strength {float(tree["settings"]["dependence_strength"]):.2f} · decay {float(tree["settings"]["dependence_decay"]):.2f} · year-end level kept independent</text>',
         f'<text x="55" y="922" font-family="system-ui, sans-serif" font-size="12" fill="#596777">Iterative proportional fitting converged in {int(tree["raking"]["iterations"])} iterations; maximum marginal error {float(tree["raking"]["max_marginal_error"]):.2e}.</text>',
         '<text x="55" y="954" font-family="system-ui, sans-serif" font-size="12" fill="#182737">Observed:</text>',
-        '<text x="126" y="954" font-family="system-ui, sans-serif" font-size="12" fill="#596777">five exact action marginals at each meeting and the terminal marginal.</text>',
+        '<text x="126" y="954" font-family="system-ui, sans-serif" font-size="12" fill="#596777">five exact action marginals at each meeting.</text>',
         '<text x="55" y="978" font-family="system-ui, sans-serif" font-size="12" fill="#182737">Modeled:</text>',
         '<text x="126" y="978" font-family="system-ui, sans-serif" font-size="12" fill="#596777">how one exact action changes the odds at all later dates.</text>',
         '<text x="55" y="1026" font-family="system-ui, sans-serif" font-size="11" fill="#596777">Action colors run from -50+ bp through -25, unchanged, +25 and +50+ bp.</text>',

@@ -17,7 +17,6 @@ class MeetingScenarioError(ValueError):
 DEFAULT_TREE_SETTINGS = {
     "dependence_strength": 0.35,
     "dependence_decay": 0.70,
-    "terminal_consistency_sigma_bp": 100.0,
     "rake_tolerance": 1e-10,
     "rake_max_iterations": 2000,
 }
@@ -86,17 +85,15 @@ def _tree_settings(raw: Mapping[str, object] | None) -> dict[str, float | int]:
         raise MeetingScenarioError("conditional tree settings have invalid fields")
     strength = _finite(values["dependence_strength"], "dependence_strength")
     decay = _finite(values["dependence_decay"], "dependence_decay")
-    sigma = _finite(values["terminal_consistency_sigma_bp"], "terminal_consistency_sigma_bp")
     tolerance = _finite(values["rake_tolerance"], "rake_tolerance")
     iterations = values["rake_max_iterations"]
     if isinstance(iterations, bool) or not isinstance(iterations, int):
         raise MeetingScenarioError("rake_max_iterations must be an integer")
-    if strength < 0 or not 0 <= decay <= 1 or sigma <= 0 or tolerance <= 0 or iterations <= 0:
+    if strength < 0 or not 0 <= decay <= 1 or tolerance <= 0 or iterations <= 0:
         raise MeetingScenarioError("conditional tree settings are outside their valid ranges")
     return {
         "dependence_strength": strength,
         "dependence_decay": decay,
-        "terminal_consistency_sigma_bp": sigma,
         "rake_tolerance": tolerance,
         "rake_max_iterations": iterations,
     }
@@ -105,19 +102,15 @@ def _tree_settings(raw: Mapping[str, object] | None) -> dict[str, float | int]:
 def _build_conditional_tree(
     config: FedPathConfig,
     meeting_rows: list[dict[str, object]],
-    terminal: dict[str, object],
-    terminal_date: date,
     raw_settings: Mapping[str, object] | None,
 ) -> dict[str, object]:
     """Build a conditional five-outcome tree while preserving every quote.
 
     The joint distribution is the minimum-relative-entropy distribution around
-    a configurable coupling kernel. The kernel combines a persistent latent
-    policy-stance term with a consistency term linking actions through the
-    terminal date to the separately traded terminal-rate distribution. Iterative
-    proportional fitting then restores all meeting and terminal one-dimensional
-    marginals exactly. Conditional node probabilities are therefore modeled,
-    while the quoted marginal probabilities remain observed inputs.
+    a configurable persistent policy-stance kernel. Iterative proportional
+    fitting then restores every quoted meeting marginal exactly. The separately
+    traded year-end level market is deliberately excluded: it is an independent
+    comparison, not a constraint on a lattice of discrete meeting actions.
     """
     settings = _tree_settings(raw_settings)
     categories = ("down_50plus", "down_25", "unchanged", "up_25", "up_50plus")
@@ -125,9 +118,7 @@ def _build_conditional_tree(
     outcome_count = len(categories)
     meeting_probabilities: list[tuple[float, ...]] = []
     meeting_actions: list[tuple[float, ...]] = []
-    meeting_dates: list[date] = []
     for row in meeting_rows:
-        meeting_dates.append(date.fromisoformat(str(row["date"])))
         prices = row.get("prices")
         if not isinstance(prices, list) or len(prices) != outcome_count:
             raise MeetingScenarioError("conditional tree requires five ordered meeting prices")
@@ -140,35 +131,19 @@ def _build_conditional_tree(
         meeting_probabilities.append(probabilities)
         meeting_actions.append(actions)
 
-    terminal_probabilities_by_label = terminal["probabilities"]
-    if not isinstance(terminal_probabilities_by_label, Mapping):
-        raise MeetingScenarioError("terminal probabilities must be a mapping")
-    terminal_probabilities = tuple(float(terminal_probabilities_by_label[bucket.label]) for bucket in config.terminal_buckets)
-    terminal_rates = tuple(float(bucket.representative_rate) for bucket in config.terminal_buckets)
     outcome_paths = list(product(range(outcome_count), repeat=len(meeting_rows)))
-    state_keys = [(path, terminal_index) for path in outcome_paths for terminal_index in range(len(terminal_rates))]
     log_kernels: list[float] = []
-    for path, terminal_index in state_keys:
+    for path in outcome_paths:
         persistence = 0.0
         for left in range(len(path)):
             for right in range(left + 1, len(path)):
                 lag = right - left - 1
                 persistence += (float(settings["dependence_decay"]) ** lag) * scores[path[left]] * scores[path[right]]
-        action_to_terminal = sum(
-            meeting_actions[index][outcome]
-            for index, outcome in enumerate(path)
-            if meeting_dates[index] <= terminal_date
-        )
-        action_implied_upper = config.target_upper_bound + action_to_terminal / 100.0
-        terminal_gap_bp = 100.0 * (action_implied_upper - terminal_rates[terminal_index])
-        log_kernels.append(
-            float(settings["dependence_strength"]) * persistence
-            - 0.5 * (terminal_gap_bp / float(settings["terminal_consistency_sigma_bp"])) ** 2
-        )
+        log_kernels.append(float(settings["dependence_strength"]) * persistence)
     maximum_log_kernel = max(log_kernels)
     weights = []
-    for (path, terminal_index), log_kernel in zip(state_keys, log_kernels, strict=True):
-        marginal_product = terminal_probabilities[terminal_index]
+    for path, log_kernel in zip(outcome_paths, log_kernels, strict=True):
+        marginal_product = 1.0
         for index, outcome in enumerate(path):
             marginal_product *= meeting_probabilities[index][outcome]
         weights.append(marginal_product * math.exp(max(-700.0, log_kernel - maximum_log_kernel)))
@@ -177,28 +152,28 @@ def _build_conditional_tree(
         raise MeetingScenarioError("conditional tree coupling produced zero support")
     weights = [value / total for value in weights]
 
-    dimensions = len(meeting_rows) + 1
-    targets = [tuple(item) for item in meeting_probabilities] + [terminal_probabilities]
+    dimensions = len(meeting_rows)
+    targets = [tuple(item) for item in meeting_probabilities]
     converged = False
     iterations_used = 0
     max_error = math.inf
     for iteration in range(int(settings["rake_max_iterations"])):
         for dimension in range(dimensions):
-            size = outcome_count if dimension < len(meeting_rows) else len(terminal_rates)
+            size = outcome_count
             totals = [0.0] * size
-            for state_index, (path, terminal_index) in enumerate(state_keys):
-                category_index = path[dimension] if dimension < len(meeting_rows) else terminal_index
+            for state_index, path in enumerate(outcome_paths):
+                category_index = path[dimension]
                 totals[category_index] += weights[state_index]
             factors = [targets[dimension][index] / totals[index] if totals[index] > 0 else 0.0 for index in range(size)]
-            for state_index, (path, terminal_index) in enumerate(state_keys):
-                category_index = path[dimension] if dimension < len(meeting_rows) else terminal_index
+            for state_index, path in enumerate(outcome_paths):
+                category_index = path[dimension]
                 weights[state_index] *= factors[category_index]
         max_error = 0.0
         for dimension in range(dimensions):
-            size = outcome_count if dimension < len(meeting_rows) else len(terminal_rates)
+            size = outcome_count
             totals = [0.0] * size
-            for state_index, (path, terminal_index) in enumerate(state_keys):
-                category_index = path[dimension] if dimension < len(meeting_rows) else terminal_index
+            for state_index, path in enumerate(outcome_paths):
+                category_index = path[dimension]
                 totals[category_index] += weights[state_index]
             max_error = max(max_error, *(abs(totals[index] - targets[dimension][index]) for index in range(size)))
         iterations_used = iteration + 1
@@ -209,17 +184,7 @@ def _build_conditional_tree(
         raise MeetingScenarioError(f"conditional tree raking did not converge; max error {max_error:.3g}")
 
     def matching_total(prefix: tuple[int, ...]) -> float:
-        return sum(weight for weight, (path, _) in zip(weights, state_keys, strict=True) if path[:len(prefix)] == prefix)
-
-    def terminal_distribution(prefix: tuple[int, ...]) -> tuple[float, ...]:
-        denominator = matching_total(prefix)
-        if denominator <= 0:
-            raise MeetingScenarioError("conditional tree node has zero probability")
-        probabilities = [0.0] * len(terminal_rates)
-        for weight, (path, terminal_index) in zip(weights, state_keys, strict=True):
-            if path[:len(prefix)] == prefix:
-                probabilities[terminal_index] += weight / denominator
-        return tuple(probabilities)
+        return sum(weight for weight, path in zip(weights, outcome_paths, strict=True) if path[:len(prefix)] == prefix)
 
     nodes: list[dict[str, object]] = []
     node_ids: dict[tuple[int, ...], str] = {}
@@ -229,44 +194,9 @@ def _build_conditional_tree(
     for depth in range(len(meeting_rows) + 1):
         for prefix in product(range(outcome_count), repeat=depth):
             probability = matching_total(prefix)
-            terminal_depth = sum(item <= terminal_date for item in meeting_dates)
-            # At and after the terminal meeting, the displayed rate resets to
-            # the separately traded terminal state. A later action must not
-            # retroactively revise that established rate anchor.
-            terminal_prefix = prefix[:terminal_depth] if depth > terminal_depth else prefix
-            conditional_terminal_probabilities = terminal_distribution(terminal_prefix)
-            conditional_terminal = sum(
-                probability * rate
-                for probability, rate in zip(conditional_terminal_probabilities, terminal_rates, strict=True)
-            )
             realized_actions = [meeting_actions[index][outcome] for index, outcome in enumerate(prefix)]
-            before_or_at_terminal = [
-                action for index, action in enumerate(realized_actions) if meeting_dates[index] <= terminal_date
-            ]
-            after_terminal = [
-                action for index, action in enumerate(realized_actions) if meeting_dates[index] > terminal_date
-            ]
-            if depth and meeting_dates[depth - 1] >= terminal_date:
-                representative_upper = conditional_terminal + sum(after_terminal) / 100.0
-            else:
-                representative_upper = config.target_upper_bound + sum(before_or_at_terminal) / 100.0
-            if depth and meeting_dates[depth - 1] >= terminal_date:
-                shift = sum(after_terminal) / 100.0
-                rate_distribution = [
-                    {"rate": rate + shift, "probability": conditional_terminal_probabilities[index]}
-                    for index, rate in enumerate(terminal_rates)
-                ]
-            else:
-                rate_distribution = [{"rate": representative_upper, "probability": 1.0}]
-            # At the terminal meeting, keep the realized meeting action and the
-            # separately traded terminal-rate constraint as two distinct
-            # quantities.  The interactive chart can then show the action
-            # first and the terminal-market reconciliation as an explicit
-            # bridge instead of making (for example) a +50 bp action look like
-            # a rate cut.
-            action_implied_upper = representative_upper
-            if depth and meeting_dates[depth - 1] == terminal_date:
-                action_implied_upper = config.target_upper_bound + sum(before_or_at_terminal) / 100.0
+            representative_upper = config.target_upper_bound + sum(realized_actions) / 100.0
+            rate_distribution = [{"rate": representative_upper, "probability": 1.0}]
             next_probabilities = None
             branches: list[dict[str, object]] = []
             if depth < len(meeting_rows):
@@ -291,8 +221,7 @@ def _build_conditional_tree(
                 "last_realized_date": None if not prefix else meeting_rows[depth - 1]["date"],
                 "next_meeting_date": None if depth == len(meeting_rows) else meeting_rows[depth]["date"],
                 "next_probabilities": next_probabilities,
-                "conditional_terminal_expected_upper": conditional_terminal,
-                "action_implied_target_upper": action_implied_upper,
+                "action_implied_target_upper": representative_upper,
                 "representative_target_upper": representative_upper,
                 "rate_distribution": rate_distribution,
                 "branches": branches,
@@ -304,7 +233,7 @@ def _build_conditional_tree(
         for current_outcome in range(outcome_count):
             numerator = [0.0] * outcome_count
             denominator = 0.0
-            for weight, (path, _) in zip(weights, state_keys, strict=True):
+            for weight, path in zip(weights, outcome_paths, strict=True):
                 if path[index] != current_outcome:
                     continue
                 denominator += weight
@@ -327,7 +256,6 @@ def _build_conditional_tree(
         leaf_paths.append({
             "path": [categories[index] for index in path],
             "path_probability": node["path_probability"],
-            "conditional_terminal_expected_upper": node["conditional_terminal_expected_upper"],
             "representative_target_upper_after_last_meeting": node["representative_target_upper"],
         })
     leaf_paths.sort(key=lambda item: -float(item["path_probability"]))
@@ -343,9 +271,10 @@ def _build_conditional_tree(
         "adjacent_conditional_tables": adjacent_tables,
         "leaf_paths": leaf_paths,
         "interpretation": {
-            "observed": "All five exact meeting-action probabilities and the terminal one-dimensional marginal are taken from normalized quoted markets.",
-            "modeled": "Conditional future probabilities are generated by a persistent policy-stance coupling and terminal-level consistency kernel, then raked back to every observed marginal.",
+            "observed": "All five exact meeting-action probabilities are taken from normalized quoted markets.",
+            "modeled": "Conditional future probabilities are generated by a persistent policy-stance coupling, then raked back to every observed meeting marginal.",
             "not_identified": "The conditional transition matrices are assumptions disciplined by market marginals, not directly traded conditional probabilities.",
+            "year_end_market": "The separately traded year-end rate distribution is reported as an independent comparison and does not constrain this action tree.",
         },
     }
 
@@ -364,9 +293,8 @@ def compute_meeting_scenarios(
 
     A scenario replaces one meeting's expected move by the conditional mean of
     its down/unchanged/up category. Every later meeting's own action
-    distribution is held fixed. The mechanical path carries the surprise
-    forward one-for-one; the anchor-respecting path resets at the separately
-    traded end-2026 terminal-rate expectation.
+    distribution is held fixed and the surprise carries forward one-for-one.
+    The separately traded year-end level is retained only as a comparison.
     """
     if len(meetings) != len(config.meetings) or not meetings:
         raise MeetingScenarioError("meeting distributions must match the configured meetings")
@@ -381,16 +309,7 @@ def compute_meeting_scenarios(
     meeting_rows: list[dict[str, object]] = []
     baseline_points: list[dict[str, object]] = []
     current_upper = config.target_upper_bound
-    anchor_inserted = False
     for meeting in meetings:
-        if meeting.config.date > terminal_date and not anchor_inserted:
-            current_upper = float(terminal["expected_target_upper"])
-            baseline_points.append({
-                "date": terminal_date.isoformat(), "kind": "terminal_anchor",
-                "expected_target_upper": current_upper,
-                "expected_effective_rate": current_upper - spread,
-            })
-            anchor_inserted = True
         before = current_upper
         current_upper += meeting.expected_change_bp / 100.0
         categories = _categories(meeting)
@@ -414,20 +333,6 @@ def compute_meeting_scenarios(
             "expected_target_upper": current_upper,
             "expected_effective_rate": current_upper - spread,
         })
-        if meeting.config.date == terminal_date:
-            current_upper = float(terminal["expected_target_upper"])
-            baseline_points.append({
-                "date": terminal_date.isoformat(), "kind": "terminal_anchor",
-                "expected_target_upper": current_upper,
-                "expected_effective_rate": current_upper - spread,
-            })
-            anchor_inserted = True
-    if not anchor_inserted:
-        baseline_points.append({
-            "date": terminal_date.isoformat(), "kind": "terminal_anchor",
-            "expected_target_upper": float(terminal["expected_target_upper"]),
-            "expected_effective_rate": float(terminal["expected_effective_rate"]),
-        })
 
     scenarios: list[dict[str, object]] = []
     for index, meeting in enumerate(meeting_rows):
@@ -445,18 +350,13 @@ def compute_meeting_scenarios(
                         continue
                     baseline_upper = float(point["expected_target_upper"])
                     mechanical_upper = baseline_upper + shock / 100.0
-                    reset = (
-                        shock_date <= terminal_date
-                        and (point["kind"] == "terminal_anchor" or point_date > terminal_date)
-                    )
-                    anchored_upper = baseline_upper if reset else mechanical_upper
                     downstream.append({
                         "date": point["date"], "kind": point["kind"],
                         "baseline_expected_target_upper": baseline_upper,
                         "mechanical_expected_target_upper": mechanical_upper,
-                        "anchor_respecting_expected_target_upper": anchored_upper,
+                        "anchor_respecting_expected_target_upper": mechanical_upper,
                         "mechanical_change_bp": shock,
-                        "anchor_respecting_change_bp": 0.0 if reset else shock,
+                        "anchor_respecting_change_bp": shock,
                     })
             scenarios.append({
                 "shock_meeting_date": meeting["date"],
@@ -478,7 +378,7 @@ def compute_meeting_scenarios(
                 "downstream": downstream,
             })
 
-    conditional_tree = _build_conditional_tree(config, meeting_rows, terminal, terminal_date, tree_settings)
+    conditional_tree = _build_conditional_tree(config, meeting_rows, tree_settings)
     return {
         "schema_version": 1,
         "generated_at": generated_at,
@@ -495,7 +395,7 @@ def compute_meeting_scenarios(
             "identified": "Each meeting's five normalized action probabilities (-50+, -25, 0, +25, +50+) and expected action.",
             "not_identified": "Conditional future action probabilities such as P(October action | September outcome) are not identified by separate marginal markets.",
             "shock_only": "Replace one meeting expected action with that category's conditional mean and leave every other meeting action distribution unchanged.",
-            "terminal_anchor": "Mechanical paths carry the surprise forward; anchor-respecting paths reset at the independently traded end-2026 target-rate expectation.",
+            "year_end_comparison": "The independently traded end-2026 target-rate distribution is reported beside, but never imposed on, the discrete meeting-action path.",
             "conditional_tree": "A marginal-preserving five-outcome joint model makes each future meeting distribution conditional on the full realized path. Exact action magnitudes remain separate; shock-only grouped paths remain as a benchmark.",
         },
     }

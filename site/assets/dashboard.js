@@ -454,15 +454,11 @@ function renderTree(vintage, animateFromPath = null) {
   const depth = state.branchPath.length;
   $("branch-step").textContent = depth < meetings.length ? `NEXT DECISION · ${depth + 1} OF ${meetings.length}` : "COMPLETE CONDITIONAL PATH";
   $("branch-meeting").textContent = depth < meetings.length ? month(meetings[depth].date) : "Terminal state";
-  const atTerminalAnchor = depth && meetings[depth - 1].date === vintage.policy.terminal_anchor.date;
-  const afterTerminalAnchor = depth && meetings[depth - 1].date > vintage.policy.terminal_anchor.date;
   const selectedPath = state.branchPath.map(value => categoryLetter[value]).join(" → ");
   if (!depth) {
     $("branch-path").textContent = `Start at ${rate(vintage.policy.target_upper_bound_baseline)}. Choose a realized outcome to update every later branch.`;
-  } else if (atTerminalAnchor && Math.abs((selectedNode.action_rate ?? selectedNode.rate) - selectedNode.rate) > 1e-6) {
-    $("branch-path").textContent = `${selectedPath} · ${(100 * selectedNode.probability).toFixed(2)}% unconditional path mass · action reaches ${rate(selectedNode.action_rate)}, then the year-end market anchors the modeled path at ${rate(selectedNode.rate)}`;
   } else {
-    $("branch-path").textContent = `${selectedPath} · ${(100 * selectedNode.probability).toFixed(2)}% unconditional path mass · ${rate(selectedNode.rate)} ${afterTerminalAnchor ? "terminal-anchored modeled" : "action-implied"} path level`;
+    $("branch-path").textContent = `${selectedPath} · ${(100 * selectedNode.probability).toFixed(2)}% unconditional path mass · ${rate(selectedNode.rate)} action-implied path level`;
   }
   const holder = $("branch-buttons");
   holder.replaceChildren();
@@ -523,7 +519,7 @@ function fanSelectedNodes(nodes, prefix) {
 
 function fanAxisTargetCenter(rows, selectedNodes) {
   const values = rows.flatMap(row => [row.q05, row.q25, row.q50, row.q75, row.q95]);
-  values.push(...selectedNodes.flatMap(node => [node.rate, node.action_rate ?? node.rate]));
+  values.push(...selectedNodes.map(node => node.rate));
   const halfSpan = FAN_AXIS_VIEW_SPAN_PP / 2;
   const minimumCenter = Math.max(...values) + FAN_AXIS_PADDING_PP - halfSpan;
   const maximumCenter = Math.min(...values) - FAN_AXIS_PADDING_PP + halfSpan;
@@ -532,9 +528,7 @@ function fanAxisTargetCenter(rows, selectedNodes) {
   return Math.max(minimumCenter, Math.min(maximumCenter, preferred));
 }
 
-function selectedPoint(node, depth) {
-  return { depth, rate: node.rate, actionRate: node.action_rate ?? node.rate };
-}
+function selectedPoint(node, depth) { return { depth, rate: node.rate }; }
 
 function interpolateFanRows(fromRows, toRows, progress) {
   const keys = ["q05", "q25", "q50", "q75", "q95"];
@@ -550,11 +544,9 @@ function transitionalSelectedPoints(fromNodes, toNodes, progress) {
     const points = toNodes.slice(0, -1).map(selectedPoint);
     const parent = fromNodes.at(-1);
     const child = toNodes.at(-1);
-    const actionRate = parent.rate + ((child.action_rate ?? child.rate) - parent.rate) * progress;
     points.push({
       depth: fromNodes.length - 1 + progress,
-      actionRate,
-      rate: actionRate + (child.rate - (child.action_rate ?? child.rate)) * progress,
+      rate: parent.rate + (child.rate - parent.rate) * progress,
     });
     return points;
   }
@@ -565,15 +557,12 @@ function transitionalSelectedPoints(fromNodes, toNodes, progress) {
     points.push({
       depth: fromNodes.length - 1 - progress,
       rate: removed.rate + (parent.rate - removed.rate) * progress,
-      actionRate: (removed.action_rate ?? removed.rate) + (parent.rate - (removed.action_rate ?? removed.rate)) * progress,
     });
     return points;
   }
   return toNodes.map((node, depth) => ({
     depth,
     rate: fromNodes[depth].rate + (node.rate - fromNodes[depth].rate) * progress,
-    actionRate: (fromNodes[depth].action_rate ?? fromNodes[depth].rate)
-      + ((node.action_rate ?? node.rate) - (fromNodes[depth].action_rate ?? fromNodes[depth].rate)) * progress,
   }));
 }
 
@@ -605,24 +594,12 @@ function drawFanFrame(meetings, rows, selectedPoints, axisCenter) {
   selectedPoints.slice(1).forEach((point, index) => {
     const previous = selectedPoints[index];
     element.appendChild(svg("line", {
-      x1: x(previous.depth), y1: y(previous.rate), x2: x(point.depth), y2: y(point.actionRate),
+      x1: x(previous.depth), y1: y(previous.rate), x2: x(point.depth), y2: y(point.rate),
       stroke: "var(--orange)", "stroke-width": "2.5",
     }));
-    if (Math.abs(point.actionRate - point.rate) > 1e-6) {
-      element.appendChild(svg("line", {
-        x1: x(point.depth), y1: y(point.actionRate), x2: x(point.depth), y2: y(point.rate),
-        stroke: "var(--orange)", "stroke-width": "2", "stroke-dasharray": "5 4", opacity: ".72",
-      }));
-    }
   });
   selectedPoints.forEach(point => {
-    element.appendChild(svg("circle", { cx: x(point.depth), cy: y(point.actionRate), r: 4, fill: "var(--orange)", stroke: "var(--bg)", "stroke-width": "1.5" }));
-    if (Math.abs(point.actionRate - point.rate) > 1e-6) {
-      element.appendChild(svg("circle", { cx: x(point.depth), cy: y(point.rate), r: 4.5, fill: "var(--bg)", stroke: "var(--orange)", "stroke-width": "2" }));
-      const anchorLabel = svg("text", { x: x(point.depth) + 8, y: y(point.rate) - 7, class: "axis-label" });
-      anchorLabel.textContent = "YEAR-END MARKET ANCHOR";
-      element.appendChild(anchorLabel);
-    }
+    element.appendChild(svg("circle", { cx: x(point.depth), cy: y(point.rate), r: 4, fill: "var(--orange)", stroke: "var(--bg)", "stroke-width": "1.5" }));
   });
   ["Now", ...meetings.map(item => month(item.date))].forEach((label, index) => {
     const text = svg("text", { x: x(index), y: height - 20, "text-anchor": index === 0 ? "start" : index === meetings.length ? "end" : "middle", class: "axis-label" });
@@ -640,7 +617,7 @@ function drawFan(tree, meetings, nodes, animateFromPath = null) {
   const targetNodes = fanSelectedNodes(nodes, targetPath);
   const targetCenter = fanAxisTargetCenter(targetRows, targetNodes);
   $("fan-caption").textContent = targetPath.length
-    ? `Conditional on ${targetPath.map(value => categoryLetter[value]).join(" → ")} · orange is the action path · dashed bridge reconciles the separately traded year-end rate`
+    ? `Conditional on ${targetPath.map(value => categoryLetter[value]).join(" → ")} · orange stays on the discrete meeting-action lattice`
     : "Cyan median · 50% / 90% conditional ranges · fixed 0.25-point scrolling grid";
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!animateFromPath || reducedMotion) {

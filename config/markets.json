@@ -6,7 +6,6 @@
   "conditional_tree": {
     "dependence_strength": 0.35,
     "dependence_decay": 0.7,
-    "terminal_consistency_sigma_bp": 100.0,
     "rake_tolerance": 1e-10,
     "rake_max_iterations": 2000
   },

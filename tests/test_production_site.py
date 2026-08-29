@@ -52,11 +52,11 @@ class ProductionSiteTests(unittest.TestCase):
         for element_id in set(re.findall(r'\$\("([^"]+)"\)', methodology)):
             self.assertIn(f'id="{element_id}"', method_html)
 
-    def test_terminal_anchor_is_drawn_as_an_explicit_bridge(self) -> None:
+    def test_action_path_is_not_bridged_to_year_end_market(self) -> None:
         javascript = (ROOT / "site/assets/dashboard.js").read_text(encoding="utf-8")
-        self.assertIn('"stroke-dasharray": "5 4"', javascript)
-        self.assertIn('anchorLabel.textContent = "YEAR-END MARKET ANCHOR";', javascript)
-        self.assertIn("action reaches", javascript)
+        self.assertNotIn('anchorLabel.textContent = "YEAR-END MARKET ANCHOR";', javascript)
+        self.assertNotIn("action reaches", javascript)
+        self.assertIn("action-implied path level", javascript)
 
     def test_public_files_do_not_leak_local_paths(self) -> None:
         for path in (ROOT / "site").rglob("*"):

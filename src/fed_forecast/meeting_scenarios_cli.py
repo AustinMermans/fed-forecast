@@ -255,7 +255,7 @@ def _load_config(path: Path) -> dict[str, object]:
     if not 0 < max_spread <= 1:
         raise MeetingScenarioError("max spread must lie within (0, 1]")
     tree = payload["conditional_tree"]
-    tree_fields = {"dependence_strength", "dependence_decay", "terminal_consistency_sigma_bp", "rake_tolerance", "rake_max_iterations"}
+    tree_fields = {"dependence_strength", "dependence_decay", "rake_tolerance", "rake_max_iterations"}
     if not isinstance(tree, dict) or set(tree) != tree_fields:
         raise MeetingScenarioError("conditional tree configuration has invalid schema")
     return payload
@@ -334,7 +334,7 @@ def _report(payload: dict[str, object]) -> bytes:
     for leaf in tree["leaf_paths"][:12]:
         lines.append(
             f"| {' -> '.join(leaf['path'])} | {float(leaf['path_probability']):.2%} | "
-            f"{float(leaf['conditional_terminal_expected_upper']):.3f}% | "
+            f"{float(leaf['representative_target_upper_after_last_meeting']):.3f}% | "
             f"{float(leaf['representative_target_upper_after_last_meeting']):.3f}% |"
         )
     lines.extend((
@@ -368,7 +368,7 @@ def _report(payload: dict[str, object]) -> bytes:
         "- The conditional tree is the primary scenario engine: every realized outcome updates all remaining meeting probabilities.",
         "- Iterative proportional fitting preserves each quoted meeting marginal and the quoted terminal-rate distribution exactly.",
         "- Conditional transitions are model-implied because separate markets do not directly trade P(next outcome | prior outcome).",
-        "- A persistent policy-stance kernel transmits information forward; a terminal-consistency kernel reconciles cumulative actions with the end-2026 level surface.",
+        "- A persistent policy-stance kernel transmits information forward while preserving every quoted meeting marginal; the end-2026 level surface remains an independent comparison.",
         "- The older one-shock calculation is retained only as a transparent mechanical benchmark.",
         "- The primary tree keeps -50+, -25, 0, +25 and +50+ as separate branches. Open-ended tails use +/-50 bp as their path-arithmetic representatives.",
         "- The older down/up benchmark still uses conditional means within grouped directions and is not the interactive tree.",
@@ -377,7 +377,7 @@ def _report(payload: dict[str, object]) -> bytes:
     ))
     for meeting in meetings:
         lines.append(f"- [{meeting['date']}](https://polymarket.com/event/{meeting['event_slug']})")
-    lines.append(f"- [End-2026 terminal anchor](https://polymarket.com/event/{terminal['event_slug']})")
+    lines.append(f"- [Independent end-2026 rate market](https://polymarket.com/event/{terminal['event_slug']})")
     return ("\n".join(lines) + "\n").encode("utf-8")
 
 
@@ -415,7 +415,7 @@ _CONDITIONAL_HISTORY_FIELDS = (
     "run_id", "generated_at", "snapshot_fetched_at", "realized_meeting_date",
     "next_meeting_date", "realized_category", "realized_probability",
     "next_down_probability", "next_unchanged_probability", "next_up_probability",
-    "dependence_strength", "dependence_decay", "terminal_consistency_sigma_bp",
+    "dependence_strength", "dependence_decay",
 )
 
 
@@ -451,7 +451,6 @@ def _rebuild_conditional_history(root: Path) -> None:
                     "next_up_probability": up_probability,
                     "dependence_strength": settings["dependence_strength"],
                     "dependence_decay": settings["dependence_decay"],
-                    "terminal_consistency_sigma_bp": settings["terminal_consistency_sigma_bp"],
                 })
     rows.sort(key=lambda item: (
         str(item["generated_at"]), str(item["run_id"]), str(item["realized_meeting_date"]),

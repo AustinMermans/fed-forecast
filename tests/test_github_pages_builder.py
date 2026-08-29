@@ -139,7 +139,7 @@ class ForecastReplayTests(unittest.TestCase):
         self.assertEqual(compact[1]["quote_status"], "carried_forward")
         self.assertEqual(compact[1]["source_timestamp"], 123)
 
-    def test_five_bucket_path_preserves_meeting_and_terminal_means(self) -> None:
+    def test_five_bucket_path_preserves_meeting_mean_without_terminal_reset(self) -> None:
         probabilities = (0.01, 0.04, 0.80, 0.14, 0.01)
         labels = ("50+ bps decrease", "25 bps decrease", "No change", "25 bps increase", "50+ bps increase")
         meeting = {
@@ -153,20 +153,15 @@ class ForecastReplayTests(unittest.TestCase):
             vintage_at="2026-08-28T13:30:00Z",
             baseline=3.75,
             meetings=[meeting],
-            terminal={"probabilities": {"3.75%": 0.60, "4.0%": 0.40}},
-            terminal_rates={"3.75%": 3.75, "4.0%": 4.0},
-            terminal_date="2026-12-09",
             settings={
                 "dependence_strength": 0.35,
                 "dependence_decay": 0.70,
-                "terminal_consistency_sigma_bp": 100.0,
                 "rake_tolerance": 1e-12,
                 "rake_max_iterations": 2000,
             },
         )
-        self.assertEqual([point["kind"] for point in points], ["vintage", "meeting", "terminal"])
+        self.assertEqual([point["kind"] for point in points], ["vintage", "meeting"])
         self.assertTrue(math.isclose(points[1]["mean"], 3.775, abs_tol=1e-10))
-        self.assertTrue(math.isclose(points[2]["mean"], 3.85, abs_tol=1e-10))
         for point in points:
             self.assertLessEqual(point["q05"], point["q25"])
             self.assertLessEqual(point["q25"], point["q50"])
