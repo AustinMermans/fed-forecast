@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+.pytest_cache/
+.playwright-cli/
+outputs/*/runs/
+outputs/*/failures/
+outputs/*/latest.json
+outputs/*/*.csv
+outputs/**/*.log
+tmp/

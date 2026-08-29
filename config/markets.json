@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "max_spread": 0.1,
+  "terminal_date": "2026-12-09",
+  "terminal_event_slug": "what-will-the-fed-rate-be-at-the-end-of-2026",
+  "conditional_tree": {
+    "dependence_strength": 0.35,
+    "dependence_decay": 0.7,
+    "terminal_consistency_sigma_bp": 100.0,
+    "rake_tolerance": 1e-10,
+    "rake_max_iterations": 2000
+  },
+  "meetings": [
+    {
+      "date": "2026-09-16",
+      "event_slug": "fed-decision-in-september-762"
+    },
+    {
+      "date": "2026-10-28",
+      "event_slug": "fed-decision-in-october-20260617190323537"
+    },
+    {
+      "date": "2026-12-09",
+      "event_slug": "fed-decision-in-december-20260729232808632"
+    },
+    {
+      "date": "2027-01-27",
+      "event_slug": "fed-decision-in-january-20260729233815502"
+    }
+  ]
+}

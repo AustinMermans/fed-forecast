@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a0d0f">
+  <meta name="description" content="Replay the Polymarket-implied distribution for the Federal funds target range and explore conditional meeting paths.">
+  <meta property="og:title" content="Fed Forecast">
+  <meta property="og:description" content="A replayable market distribution for the Federal Reserve target-rate path.">
+  <meta property="og:url" content="https://austinmermans.github.io/fed-forecast/">
+  <meta property="og:image" content="https://austinmermans.github.io/fed-forecast/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Fed Forecast</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to forecast replay</a>
+  <header class="topbar">
+    <a class="wordmark" href="#replay" aria-label="Fed Forecast home"><span>FF</span> FED FORECAST</a>
+    <nav aria-label="Sections"><a href="#replay">Replay</a><a href="#path">Scenarios</a><a href="#method">Method</a></nav>
+    <div class="status" id="freshness"><i></i>Loading markets…</div>
+  </header>
+
+  <main id="main">
+    <section class="replay" id="replay">
+      <div class="replay-head">
+        <div>
+          <p class="timestamp" id="selected-time">—</p>
+          <h1 id="selected-label">The market's path for the Fed</h1>
+          <p class="context" id="selected-context">Choose any archived observation to see the six-month distribution that was knowable then—and the target path that followed.</p>
+        </div>
+        <div class="top-readout" id="top-readout" aria-live="polite"></div>
+      </div>
+
+      <div class="tape-controls" aria-label="Replay controls">
+        <button class="play" id="play" type="button" aria-pressed="false"><span aria-hidden="true">▶</span> Play</button>
+        <button class="step" id="previous" type="button" aria-label="Previous observation">←</button>
+        <label class="date-control" for="date-picker"><span>DATE</span><input id="date-picker" type="date"></label>
+        <label class="speed-control" for="playback-speed"><span>SPEED</span><select id="playback-speed"><option value="1">1 day/s</option><option value="5" selected>5 days/s</option><option value="20">20 days/s</option></select></label>
+        <label for="vintage-slider"><span>OBSERVATION</span><strong id="position">—</strong></label>
+        <input id="vintage-slider" type="range" min="0" max="0" value="0" step="1">
+        <button class="step" id="next" type="button" aria-label="Next observation">→</button>
+        <button class="latest range-jump" id="one-year" type="button">1Y</button>
+        <button class="latest range-jump" id="oldest" type="button">Archive start</button>
+        <button class="latest" id="latest" type="button">Latest</button>
+      </div>
+      <div class="timeline" id="timeline" aria-hidden="true"></div>
+      <p class="event-note" id="event-note"></p>
+
+      <div class="surface-head forward-head">
+        <div><p class="chart-kicker">FORWARD TARGET-RATE DISTRIBUTION</p><h2 id="forward-title">Six months viewed from this date</h2></div>
+        <p id="forward-caption">Upper bound of the target range. Bands contain 50% and 90% of modeled path probability; rules mark scheduled FOMC meetings.</p>
+      </div>
+      <div class="chart-shell forward-shell">
+        <svg id="forward-chart" role="img" aria-labelledby="forward-svg-title forward-desc">
+          <title id="forward-svg-title">Forward Federal funds target-range distribution</title>
+          <desc id="forward-desc">Market-implied probability bands, median forecast, subsequently realized target path, FOMC dates, and a quarter-percentage-point scrolling rate grid.</desc>
+        </svg>
+        <div class="chart-tooltip" id="tooltip" role="tooltip"></div>
+      </div>
+      <div class="legend" id="forward-legend">
+        <span><i class="legend-band band-90"></i>90% range</span><span><i class="legend-band band-50"></i>50% range</span>
+        <span><i class="legend-line median-line"></i>Modeled median from market marginals</span><span><i class="legend-line actual-line"></i>Realized target</span>
+        <span><i class="legend-line meeting-line"></i>FOMC meeting</span>
+      </div>
+      <div class="horizon-strip" id="horizon-strip" aria-label="Forward distribution summaries by meeting"></div>
+
+      <div class="market-surface" id="snapshot">
+        <div class="block-head">
+          <div><p class="chart-kicker">CONTRACTS UNDER THE FORECAST</p><h2>Five outcomes at each meeting</h2></div>
+          <div><p id="market-note">Normalized Yes prices. Activity is event-level and stamped when observed.</p><div class="meeting-tabs" id="meeting-tabs" role="group" aria-label="Select policy meeting"></div></div>
+        </div>
+        <div class="snapshot-grid">
+          <div class="table-wrap">
+            <table class="probability-table"><thead><tr><th>Meeting</th><th>−50 bp or more</th><th>−25 bp</th><th>No change</th><th>+25 bp</th><th>+50 bp or more</th><th>Activity</th><th>Market</th></tr></thead><tbody id="meeting-table"></tbody></table>
+          </div>
+          <aside class="change-panel"><p class="chart-kicker">REPRICING</p><h2 id="change-title">Versus prior observation</h2><p class="change-sub" id="change-sub"></p><div id="change-bars" class="change-bars"></div><p class="unit-note"><strong>Probability points, not basis points.</strong> A move from 30% to 42% is +12 pp.</p></aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="path" id="path">
+      <div class="section-label"><span>02</span> CONDITIONAL PATH EXPLORER</div>
+      <div class="block-head"><div><p class="chart-kicker">IF THIS MEETING LANDS HERE</p><h2>How later odds could reprice</h2></div><p>Select a realized move at each meeting. Quoted probabilities supply the unconditional marginals; a transparent structural dependence model conditions later meetings.</p></div>
+      <div id="tree-availability" class="availability" hidden></div>
+      <div class="path-grid" id="path-content">
+        <aside class="branch-panel"><p id="branch-step" class="branch-step"></p><h3 id="branch-meeting">—</h3><p id="branch-path" class="branch-path"></p><div id="branch-buttons" class="branch-buttons"></div><button id="branch-back" class="back" type="button">← Undo last outcome</button></aside>
+        <div class="fan-block"><div class="fan-caption"><span>Target upper bound</span><span id="fan-caption">Weighted path distribution</span></div><svg id="fan-chart" role="img" aria-label="Conditional target-rate fan through Federal Reserve meetings"></svg></div>
+      </div>
+      <div class="path-method"><b>Where the model begins</b><p>Every branch is a discrete −50, −25, 0, +25, or +50 bp representative action. The joint tree preserves all quoted meeting and terminal marginals, then adds persistence across meetings and consistency with the terminal-rate market. That dependence is an assumption, not another traded price.</p></div>
+    </section>
+
+    <section class="method" id="method">
+      <div class="section-label"><span>03</span> METHOD &amp; LIMITS</div>
+      <div class="method-grid">
+        <div><b>Quoted</b><p>A valid CLOB midpoint is preferred; a contemporaneous Gamma price is a labeled fallback. Five Yes prices are normalized to 100%.</p></div>
+        <div><b>Archived</b><p>Each frame uses only observations available by that timestamp. No contract appears before its first quote; held or reconstructed observations are labeled.</p></div>
+        <div><b>Translated</b><p>Open-ended tails use ±50 bp for path arithmetic. The chart shows the upper bound of the target range, not EFFR or a fee-adjusted break-even.</p></div>
+        <div><b>Modeled</b><p>The fan preserves quoted marginals with iterative proportional fitting. Cross-meeting dependence is structural. Historical meeting-only and current terminal-anchored regimes are versioned and identified in the replay.</p></div>
+      </div>
+      <p class="disclosure">An explanatory research monitor, not a trading recommendation or a full calibration study. Prices omit fees, spread, slippage, and settlement risk. Historical API reconstructions are distinguishable from contemporaneously archived observations. Source links and machine-readable current data are provided below.</p>
+    </section>
+  </main>
+
+  <footer><span>FED FORECAST / PUBLIC ARCHIVE</span><span id="footer-time">—</span><span class="footer-links"><a href="data/dashboard.json">Data ↗</a><a href="https://github.com/AustinMermans/fed-forecast">Source ↗</a><a href="https://github.com/AustinMermans/fed-forecast/blob/main/config/model.json">Model ↗</a><a href="https://github.com/AustinMermans/fed-forecast/blob/main/NOTICE.md">Notice ↗</a></span></footer>
+  <script src="assets/dashboard.js" defer></script>
+</body>
+</html>

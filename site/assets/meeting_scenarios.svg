@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850" role="img" aria-labelledby="title desc">
+<title id="title">Federal Reserve meeting probabilities and isolated action scenarios</title>
+<desc id="desc">Top panel decomposes each meeting into down, unchanged and up probabilities. Bottom panel shows the expected target upper bound at the next meeting if one meeting action category is substituted while all later action probabilities remain unchanged.</desc>
+<rect width="100%" height="100%" fill="#fbfaf7"/>
+<text x="55" y="48" font-family="Georgia, serif" font-size="29" font-weight="700" fill="#182737">Fed meeting map: marginals and one-shock scenarios</text>
+<text x="55" y="78" font-family="system-ui, sans-serif" font-size="14" fill="#596777">Snapshot 2026-08-29T03:56:31.774503Z · target upper bound 3.750%</text>
+<text x="55" y="112" font-family="system-ui, sans-serif" font-size="15" font-weight="650" fill="#182737">1 · Current normalized action probabilities</text>
+<line x1="90" y1="370" x2="1145" y2="370" stroke="#4d5966"/>
+<line x1="90" y1="370.0" x2="1145" y2="370.0" stroke="#d9dde1" stroke-width="1"/>
+<text x="78" y="374.0" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">0%</text>
+<line x1="90" y1="308.8" x2="1145" y2="308.8" stroke="#d9dde1" stroke-width="1"/>
+<text x="78" y="312.8" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">25%</text>
+<line x1="90" y1="247.5" x2="1145" y2="247.5" stroke="#d9dde1" stroke-width="1"/>
+<text x="78" y="251.5" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">50%</text>
+<line x1="90" y1="186.2" x2="1145" y2="186.2" stroke="#d9dde1" stroke-width="1"/>
+<text x="78" y="190.2" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">75%</text>
+<line x1="90" y1="125.0" x2="1145" y2="125.0" stroke="#d9dde1" stroke-width="1"/>
+<text x="78" y="129.0" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">100%</text>
+<rect data-bar="2026-09-16-down" x="150.9" y="367.8" width="42" height="2.2" rx="3" fill="#3b82b8"/>
+<text x="171.9" y="360.8" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">0.9%</text>
+<text x="171.9" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">D</text>
+<rect data-bar="2026-09-16-unchanged" x="200.9" y="239.6" width="42" height="130.4" rx="3" fill="#a7adb5"/>
+<text x="221.9" y="232.6" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">53.2%</text>
+<text x="221.9" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">U</text>
+<rect data-bar="2026-09-16-up" x="250.9" y="257.6" width="42" height="112.4" rx="3" fill="#c05a3e"/>
+<text x="271.9" y="250.6" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">45.9%</text>
+<text x="271.9" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">U</text>
+<text x="221.9" y="413" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#283746">2026-09-16</text>
+<text x="221.9" y="431" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">E[action] +11.4 bp</text>
+<rect data-bar="2026-10-28-down" x="414.6" y="358.3" width="42" height="11.7" rx="3" fill="#3b82b8"/>
+<text x="435.6" y="351.3" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">4.8%</text>
+<text x="435.6" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">D</text>
+<rect data-bar="2026-10-28-unchanged" x="464.6" y="200.3" width="42" height="169.7" rx="3" fill="#a7adb5"/>
+<text x="485.6" y="193.3" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">69.3%</text>
+<text x="485.6" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">U</text>
+<rect data-bar="2026-10-28-up" x="514.6" y="306.3" width="42" height="63.7" rx="3" fill="#c05a3e"/>
+<text x="535.6" y="299.3" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">26.0%</text>
+<text x="535.6" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">U</text>
+<text x="485.6" y="413" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#283746">2026-10-28</text>
+<text x="485.6" y="431" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">E[action] +5.2 bp</text>
+<rect data-bar="2026-12-09-down" x="678.4" y="356.2" width="42" height="13.8" rx="3" fill="#3b82b8"/>
+<text x="699.4" y="349.2" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">5.6%</text>
+<text x="699.4" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">D</text>
+<rect data-bar="2026-12-09-unchanged" x="728.4" y="260.6" width="42" height="109.4" rx="3" fill="#a7adb5"/>
+<text x="749.4" y="253.6" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">44.7%</text>
+<text x="749.4" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">U</text>
+<rect data-bar="2026-12-09-up" x="778.4" y="248.3" width="42" height="121.7" rx="3" fill="#c05a3e"/>
+<text x="799.4" y="241.3" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">49.7%</text>
+<text x="799.4" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">U</text>
+<text x="749.4" y="413" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#283746">2026-12-09</text>
+<text x="749.4" y="431" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">E[action] +11.1 bp</text>
+<rect data-bar="2027-01-27-down" x="942.1" y="324.9" width="42" height="45.1" rx="3" fill="#3b82b8"/>
+<text x="963.1" y="317.9" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">18.4%</text>
+<text x="963.1" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">D</text>
+<rect data-bar="2027-01-27-unchanged" x="992.1" y="227.0" width="42" height="143.0" rx="3" fill="#a7adb5"/>
+<text x="1013.1" y="220.0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">58.4%</text>
+<text x="1013.1" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">U</text>
+<rect data-bar="2027-01-27-up" x="1042.1" y="313.2" width="42" height="56.8" rx="3" fill="#c05a3e"/>
+<text x="1063.1" y="306.2" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">23.2%</text>
+<text x="1063.1" y="390" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">U</text>
+<text x="1013.1" y="413" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#283746">2027-01-27</text>
+<text x="1013.1" y="431" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">E[action] +0.7 bp</text>
+<text x="55" y="492" font-family="system-ui, sans-serif" font-size="15" font-weight="650" fill="#182737">2 · Next-meeting expected target upper bound under one isolated action</text>
+<text x="1145" y="492" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">Future D/N/U probabilities held fixed</text>
+<line x1="90" y1="745.0" x2="1145" y2="745.0" stroke="#d9dde1"/>
+<text x="78" y="749.0" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">3.44%</text>
+<line x1="90" y1="686.2" x2="1145" y2="686.2" stroke="#d9dde1"/>
+<text x="78" y="690.2" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">3.65%</text>
+<line x1="90" y1="627.5" x2="1145" y2="627.5" stroke="#d9dde1"/>
+<text x="78" y="631.5" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">3.86%</text>
+<line x1="90" y1="568.8" x2="1145" y2="568.8" stroke="#d9dde1"/>
+<text x="78" y="572.8" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">4.07%</text>
+<line x1="90" y1="510.0" x2="1145" y2="510.0" stroke="#d9dde1"/>
+<text x="78" y="514.0" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">4.27%</text>
+<line x1="160.8" y1="611.2" x2="370.8" y2="611.2" stroke="#7b8490" stroke-dasharray="5 4"/>
+<text x="374.8" y="615.2" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">base 3.916%</text>
+<line x1="201.8" y1="611.2" x2="201.8" y2="733.7" stroke="#3b82b8" stroke-width="2"/>
+<circle data-scenario="2026-09-16-down" cx="201.8" cy="733.7" r="7" fill="#3b82b8"/>
+<text x="201.8" y="721.7" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">3.483%</text>
+<text x="201.8" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">D</text>
+<line x1="265.8" y1="611.2" x2="265.8" y2="643.3" stroke="#a7adb5" stroke-width="2"/>
+<circle data-scenario="2026-09-16-unchanged" cx="265.8" cy="643.3" r="7" fill="#a7adb5"/>
+<text x="265.8" y="631.3" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">3.802%</text>
+<text x="265.8" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">U</text>
+<line x1="329.8" y1="611.2" x2="329.8" y2="571.6" stroke="#c05a3e" stroke-width="2"/>
+<circle data-scenario="2026-09-16-up" cx="329.8" cy="571.6" r="7" fill="#c05a3e"/>
+<text x="329.8" y="559.6" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">4.056%</text>
+<text x="329.8" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">U</text>
+<text x="265.8" y="790" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#283746">2026-09-16 → 2026-10-28</text>
+<line x1="512.5" y1="579.7" x2="722.5" y2="579.7" stroke="#7b8490" stroke-dasharray="5 4"/>
+<text x="726.5" y="583.7" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">base 4.027%</text>
+<line x1="553.5" y1="579.7" x2="553.5" y2="682.8" stroke="#3b82b8" stroke-width="2"/>
+<circle data-scenario="2026-10-28-down" cx="553.5" cy="682.8" r="7" fill="#3b82b8"/>
+<text x="553.5" y="670.8" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">3.663%</text>
+<text x="553.5" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">D</text>
+<line x1="617.5" y1="579.7" x2="617.5" y2="594.6" stroke="#a7adb5" stroke-width="2"/>
+<circle data-scenario="2026-10-28-unchanged" cx="617.5" cy="594.6" r="7" fill="#a7adb5"/>
+<text x="617.5" y="582.6" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">3.975%</text>
+<text x="617.5" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">U</text>
+<line x1="681.5" y1="579.7" x2="681.5" y2="521.3" stroke="#c05a3e" stroke-width="2"/>
+<circle data-scenario="2026-10-28-up" cx="681.5" cy="521.3" r="7" fill="#c05a3e"/>
+<text x="681.5" y="509.3" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">4.234%</text>
+<text x="681.5" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">U</text>
+<text x="617.5" y="790" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#283746">2026-10-28 → 2026-12-09</text>
+<line x1="864.2" y1="618.2" x2="1074.2" y2="618.2" stroke="#7b8490" stroke-dasharray="5 4"/>
+<text x="1078.2" y="622.2" font-family="system-ui, sans-serif" font-size="10" fill="#66717d">base 3.891%</text>
+<line x1="905.2" y1="618.2" x2="905.2" y2="731.9" stroke="#3b82b8" stroke-width="2"/>
+<circle data-scenario="2026-12-09-down" cx="905.2" cy="731.9" r="7" fill="#3b82b8"/>
+<text x="905.2" y="719.9" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">3.489%</text>
+<text x="905.2" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">D</text>
+<line x1="969.2" y1="618.2" x2="969.2" y2="649.7" stroke="#a7adb5" stroke-width="2"/>
+<circle data-scenario="2026-12-09-unchanged" cx="969.2" cy="649.7" r="7" fill="#a7adb5"/>
+<text x="969.2" y="637.7" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">3.780%</text>
+<text x="969.2" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">U</text>
+<line x1="1033.2" y1="618.2" x2="1033.2" y2="576.9" stroke="#c05a3e" stroke-width="2"/>
+<circle data-scenario="2026-12-09-up" cx="1033.2" cy="576.9" r="7" fill="#c05a3e"/>
+<text x="1033.2" y="564.9" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="650" fill="#283746">4.037%</text>
+<text x="1033.2" y="767" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">U</text>
+<text x="969.2" y="790" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="650" fill="#283746">2026-12-09 → 2027-01-27</text>
+<rect x="55" y="812" width="11" height="11" fill="#3b82b8"/><text x="72" y="822" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">Down</text>
+<rect x="125" y="812" width="11" height="11" fill="#a7adb5"/><text x="142" y="822" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">Unchanged</text>
+<rect x="235" y="812" width="11" height="11" fill="#c05a3e"/><text x="252" y="822" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">Up</text>
+<text x="1145" y="822" text-anchor="end" font-family="system-ui, sans-serif" font-size="11" fill="#66717d">Scenario levels are mechanical, not conditional repricing forecasts.</text>
+</svg>

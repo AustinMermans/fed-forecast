@@ -1,0 +1,69 @@
+name: Refresh Fed Forecast
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: fed-forecast-pages
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out Fed Forecast
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Test the rate-path pipeline
+        run: PYTHONPATH=src python -m unittest discover -s tests
+
+      - name: Collect one complete market snapshot
+        run: >-
+          PYTHONPATH=src python -m fed_forecast refresh
+          --config config/markets.json
+          --output-dir outputs/meeting-scenarios
+
+      - name: Build beside the last-good site
+        run: |
+          git pull --rebase origin main
+          cp -R site site-next
+          python scripts/build_github_pages.py --output site-next
+          python scripts/validate_public_site.py site-next
+
+      - name: Publish validated compact history
+        run: |
+          rsync -a --delete site-next/ site/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site
+          if ! git diff --cached --quiet; then
+            git commit -m "data: archive market snapshot"
+            git push origin main
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy site
+        id: deployment
+        uses: actions/deploy-pages@v4

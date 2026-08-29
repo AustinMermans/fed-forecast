@@ -1,0 +1,142 @@
+from __future__ import annotations
+
+import importlib.util
+import math
+import unittest
+from pathlib import Path
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "build_github_pages.py"
+SPEC = importlib.util.spec_from_file_location("build_github_pages", SCRIPT)
+assert SPEC is not None and SPEC.loader is not None
+MODULE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MODULE)
+
+
+class ForecastReplayTests(unittest.TestCase):
+    def test_forward_chart_keeps_event_rules_off_the_plot(self) -> None:
+        dashboard = (SCRIPT.parents[1] / "site" / "assets" / "dashboard.js").read_text(encoding="utf-8")
+        self.assertNotIn('class: "event-line"', dashboard)
+        self.assertNotIn('class: "event-label"', dashboard)
+        self.assertNotIn('class: "forecast-mean"', dashboard)
+
+    def test_forward_chart_marks_fomc_meetings_without_event_rules(self) -> None:
+        dashboard = (SCRIPT.parents[1] / "site" / "assets" / "dashboard.js").read_text(encoding="utf-8")
+        self.assertIn('class: "meeting-rule"', dashboard)
+        self.assertIn('label.textContent = "FOMC";', dashboard)
+        self.assertIn("state.replay?.meeting_calendar", dashboard)
+
+    def test_forward_chart_uses_quarter_point_scrolling_grid(self) -> None:
+        dashboard = (SCRIPT.parents[1] / "site" / "assets" / "dashboard.js").read_text(encoding="utf-8")
+        self.assertIn("const AXIS_TICK_PP = .25;", dashboard)
+        self.assertIn("const AXIS_VIEW_SPAN_PP = 3.25;", dashboard)
+        self.assertIn("value += AXIS_TICK_PP", dashboard)
+        self.assertIn("prepareAxisCenters(state.index);", dashboard)
+
+    def test_replay_axis_uses_a_speed_aware_continuous_camera(self) -> None:
+        dashboard = (SCRIPT.parents[1] / "site" / "assets" / "dashboard.js").read_text(encoding="utf-8")
+        self.assertIn("const AXIS_CAMERA_MAX_PP_PER_SECOND = .26;", dashboard)
+        self.assertIn("Math.exp(-deltaMs / axisCameraTimeConstant())", dashboard)
+        self.assertIn("Math.max(50, 1000 / state.playbackSpeed)", dashboard)
+        self.assertIn("selectPosition(target, playbackTransition);", dashboard)
+        self.assertNotIn("Math.max(12, 180 / state.playbackSpeed)", dashboard)
+
+    def test_replay_uses_fixed_six_month_window(self) -> None:
+        self.assertEqual(MODULE.REPLAY_WINDOW_DAYS, 183)
+
+    def test_event_activity_uses_clob_fields_and_rejects_invalid_values(self) -> None:
+        activity = MODULE._event_activity({
+            "events": {
+                "meeting": {
+                    "volume24hr": 80.0,
+                    "volume24hrClob": 100.0,
+                    "volume": 900.0,
+                    "volumeClob": 1000.0,
+                    "liquidity": 450.0,
+                    "liquidityClob": 500.0,
+                },
+                "invalid": {"volume24hr": "nan", "liquidity": -1},
+            },
+        })
+        self.assertEqual(activity["meeting"], {"volume_24h": 100.0, "volume_total": 1000.0, "liquidity": 500.0})
+        self.assertNotIn("invalid", activity)
+
+    def test_replay_preference_favors_richer_surface_and_full_tree(self) -> None:
+        historical = {"kind": "historical_daily", "generated_at": "2026-08-07T00:00:00Z", "meetings": [{}, {}, {}, {}]}
+        thin_live = {"kind": "daily", "generated_at": "2026-08-07T13:30:00Z", "meetings": [{}, {}]}
+        full_tree = {"kind": "full_tree", "generated_at": "2026-08-07T12:00:00Z", "meetings": [{}, {}, {}, {}]}
+        self.assertGreater(MODULE._replay_preference(historical), MODULE._replay_preference(thin_live))
+        self.assertGreater(MODULE._replay_preference(full_tree), MODULE._replay_preference(historical))
+
+    def test_event_checkpoint_carries_missing_horizon_meeting_without_overwriting_live_rows(self) -> None:
+        outcomes = [
+            {"label": label, "probability": probability, "raw_probability": probability, "representative_bp": move}
+            for label, probability, move in zip(
+                ("50+ bps decrease", "25 bps decrease", "No change", "25 bps increase", "50+ bps increase"),
+                (0.05, 0.15, 0.50, 0.25, 0.05),
+                MODULE.ACTION_BUCKETS_BP,
+                strict=True,
+            )
+        ]
+        event_meeting = {
+            "date": "2026-09-16", "event_slug": "september", "expected_change_bp": 25.0,
+            "prices": outcomes,
+        }
+        historical = {
+            "generated_at": "2026-08-28T00:00:00Z",
+            "meetings": [
+                {"date": "2026-09-16"},
+                {"date": "2027-01-27", "event_slug": "january", "event_url": "https://example.test/january", "native_outcomes": outcomes, "source_timestamp": 123},
+            ],
+        }
+        completed = MODULE._complete_event_meetings([event_meeting], historical, baseline=4.25)
+        self.assertEqual([item["date"] for item in completed], ["2026-09-16", "2027-01-27"])
+        self.assertEqual(completed[0]["event_slug"], event_meeting["event_slug"])
+        self.assertNotIn("quote_status", completed[0])
+        self.assertEqual(completed[1]["quote_status"], "carried_forward")
+        self.assertEqual(completed[1]["carried_forward_from"], historical["generated_at"])
+        self.assertTrue(math.isclose(sum(item["probability"] for item in completed[1]["prices"]), 1.0))
+        self.assertTrue(math.isclose(completed[0]["expected_target_upper_after"], 4.50))
+        self.assertTrue(math.isclose(completed[1]["expected_target_upper_before"], 4.50))
+
+        compact = MODULE._compact_replay_meetings(completed)
+        self.assertEqual(compact[1]["quote_status"], "carried_forward")
+        self.assertEqual(compact[1]["source_timestamp"], 123)
+
+    def test_five_bucket_path_preserves_meeting_and_terminal_means(self) -> None:
+        probabilities = (0.01, 0.04, 0.80, 0.14, 0.01)
+        labels = ("50+ bps decrease", "25 bps decrease", "No change", "25 bps increase", "50+ bps increase")
+        meeting = {
+            "date": "2026-09-16",
+            "prices": [
+                {"label": label, "probability": probability}
+                for label, probability in zip(labels, probabilities, strict=True)
+            ],
+        }
+        points = MODULE._five_bucket_path(
+            vintage_at="2026-08-28T13:30:00Z",
+            baseline=3.75,
+            meetings=[meeting],
+            terminal={"probabilities": {"3.75%": 0.60, "4.0%": 0.40}},
+            terminal_rates={"3.75%": 3.75, "4.0%": 4.0},
+            terminal_date="2026-12-09",
+            settings={
+                "dependence_strength": 0.35,
+                "dependence_decay": 0.70,
+                "terminal_consistency_sigma_bp": 100.0,
+                "rake_tolerance": 1e-12,
+                "rake_max_iterations": 2000,
+            },
+        )
+        self.assertEqual([point["kind"] for point in points], ["vintage", "meeting", "terminal"])
+        self.assertTrue(math.isclose(points[1]["mean"], 3.775, abs_tol=1e-10))
+        self.assertTrue(math.isclose(points[2]["mean"], 3.85, abs_tol=1e-10))
+        for point in points:
+            self.assertLessEqual(point["q05"], point["q25"])
+            self.assertLessEqual(point["q25"], point["q50"])
+            self.assertLessEqual(point["q50"], point["q75"])
+            self.assertLessEqual(point["q75"], point["q95"])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,9 @@
+[project]
+name = "fed-forecast"
+version = "0.1.0"
+description = "Replay and explore Polymarket-implied Federal Reserve target-rate distributions."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+fed-forecast = "fed_forecast.__main__:main"

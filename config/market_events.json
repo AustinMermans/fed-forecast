@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "at": "2026-09-16T18:00:00Z",
+      "type": "fomc",
+      "label": "September FOMC decision",
+      "note": "Statement followed by the press conference."
+    },
+    {
+      "at": "2026-10-28T18:00:00Z",
+      "type": "fomc",
+      "label": "October FOMC decision",
+      "note": "Scheduled policy decision."
+    },
+    {
+      "at": "2026-12-09T19:00:00Z",
+      "type": "fomc",
+      "label": "December FOMC decision",
+      "note": "Scheduled policy decision and projections."
+    }
+  ]
+}
