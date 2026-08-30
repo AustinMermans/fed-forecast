@@ -1,0 +1,136 @@
+name: Collect FOMC Event Window
+
+on:
+  schedule:
+    # 13:55, 14:00-15:55, and 16:00/16:05 America/New_York.
+    - cron: "55 17 16 9 *"
+    - cron: "*/5 18-19 16 9 *"
+    - cron: "0,5 20 16 9 *"
+    - cron: "55 17 28 10 *"
+    - cron: "*/5 18-19 28 10 *"
+    - cron: "0,5 20 28 10 *"
+    - cron: "55 18 9 12 *"
+    - cron: "*/5 19-20 9 12 *"
+    - cron: "0,5 21 9 12 *"
+    - cron: "55 18 27 1 *"
+    - cron: "*/5 19-20 27 1 *"
+    - cron: "0,5 21 27 1 *"
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: fomc-event-collection
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    # Fail closed until the event-data branch has been bootstrapped and reviewed.
+    if: vars.ENABLE_FOMC_EVENT_COLLECTION == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check out reviewed collector code
+        uses: actions/checkout@v4
+        with:
+          path: code
+
+      - name: Check out isolated event archive
+        uses: actions/checkout@v4
+        with:
+          ref: event-data
+          path: archive
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Resolve scheduler timestamps and apply the strict event gate
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          RUN_CREATED_AT="$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" --jq .created_at)"
+          ACTUAL_START_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "run_created_at=${RUN_CREATED_AT}" >> "$GITHUB_OUTPUT"
+          echo "actual_start_at=${ACTUAL_START_AT}" >> "$GITHUB_OUTPUT"
+          PYTHONPATH=code/src python -m fed_forecast collect-fomc-event gate \
+            --calendar code/config/fomc_event_collection.json \
+            --markets code/config/markets.json \
+            --run-created-at "$RUN_CREATED_AT" \
+            --actual-start-at "$ACTUAL_START_AT" \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Test the collector before a canonical write
+        if: steps.gate.outputs.eligible == 'true'
+        working-directory: code
+        run: PYTHONPATH=src python -m unittest discover -s tests
+
+      - name: Refresh the archive checkout before duplicate detection
+        if: steps.gate.outputs.eligible == 'true'
+        working-directory: archive
+        run: git pull --ff-only origin event-data
+
+      - name: Collect one complete observation surface
+        id: observation
+        if: steps.gate.outputs.eligible == 'true'
+        env:
+          RUN_CREATED_AT: ${{ steps.gate.outputs.run_created_at }}
+          ACTUAL_START_AT: ${{ steps.gate.outputs.actual_start_at }}
+          EVENT_ID: ${{ steps.gate.outputs.event_id }}
+          CRON_EXPRESSION: ${{ github.event.schedule }}
+        run: |
+          for attempt in 1 2 3; do
+            if PYTHONPATH=code/src python -m fed_forecast collect-fomc-event collect \
+              --calendar code/config/fomc_event_collection.json \
+              --markets code/config/markets.json \
+              --archive archive/fomc-events \
+              --run-created-at "$RUN_CREATED_AT" \
+              --actual-start-at "$ACTUAL_START_AT" \
+              --repository "${{ github.repository }}" \
+              --workflow collect-fomc-event.yml \
+              --github-run-id "${{ github.run_id }}" \
+              --github-run-attempt "${{ github.run_attempt }}" \
+              --github-run-number "${{ github.run_number }}" \
+              --head-sha "${{ github.sha }}" \
+              --ref "${{ github.ref }}" \
+              --event-name "${{ github.event_name }}" \
+              --cron "$CRON_EXPRESSION" \
+              --github-output "$GITHUB_OUTPUT"; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then exit 2; fi
+            if [ "$attempt" -eq 1 ]; then sleep 10; else sleep 30; fi
+          done
+
+      - name: Verify and publish only this event directory
+        if: steps.gate.outputs.eligible == 'true'
+        working-directory: archive
+        env:
+          EVENT_ID: ${{ steps.gate.outputs.event_id }}
+          RUN_PATH: ${{ steps.observation.outputs.run_path }}
+          POINTER_PATH: ${{ steps.observation.outputs.pointer_path }}
+        run: |
+          PYTHONPATH=../code/src python ../code/scripts/validate_fomc_event_archive.py fomc-events "$EVENT_ID" \
+            --markets ../code/config/markets.json --calendar ../code/config/fomc_event_collection.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "fomc-events/$EVENT_ID/$RUN_PATH" "fomc-events/$EVENT_ID/$POINTER_PATH"
+          if ! git diff --cached --quiet; then
+            git commit -m "data: collect ${EVENT_ID} event window"
+            git push origin HEAD:event-data
+          fi
+
+      - name: Retain a recovery artifact
+        if: steps.gate.outputs.eligible == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fomc-event-${{ steps.gate.outputs.event_id }}-${{ steps.gate.outputs.slot_key }}
+          path: archive/fomc-events/${{ steps.gate.outputs.event_id }}
+          retention-days: 14
+          if-no-files-found: error

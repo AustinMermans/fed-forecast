@@ -1,0 +1,39 @@
+name: Inspect FOMC Event Collector
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_created_at:
+        description: "RFC3339 timestamp to test; blank uses the workflow start"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Test and inspect the gate without network collection or writes
+        env:
+          REQUESTED_AT: ${{ inputs.run_created_at }}
+        run: |
+          PYTHONPATH=src python -m unittest discover -s tests
+          if [ -n "$REQUESTED_AT" ]; then RUN_CREATED_AT="$REQUESTED_AT"; else RUN_CREATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; fi
+          PYTHONPATH=src python -m fed_forecast collect-fomc-event gate \
+            --calendar config/fomc_event_collection.json \
+            --markets config/markets.json \
+            --run-created-at "$RUN_CREATED_AT" \
+            --actual-start-at "$RUN_CREATED_AT" > fomc-event-gate.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fomc-event-collector-dry-run
+          path: fomc-event-gate.json
+          retention-days: 14
+          if-no-files-found: error

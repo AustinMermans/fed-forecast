@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "timezone": "America/New_York",
+  "window": {
+    "start": "13:55",
+    "end": "16:05",
+    "interval_minutes": 5
+  },
+  "maximum_runner_lateness_seconds": 720,
+  "meetings": [
+    {
+      "event_id": "fomc-2026-09-16",
+      "decision_date": "2026-09-16",
+      "statement_time": "14:00",
+      "presser_time": "14:30",
+      "presser_end_time": "15:30",
+      "sep": true,
+      "status": "scheduled",
+      "official_calendar_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    },
+    {
+      "event_id": "fomc-2026-10-28",
+      "decision_date": "2026-10-28",
+      "statement_time": "14:00",
+      "presser_time": "14:30",
+      "presser_end_time": "15:30",
+      "sep": false,
+      "status": "scheduled",
+      "official_calendar_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    },
+    {
+      "event_id": "fomc-2026-12-09",
+      "decision_date": "2026-12-09",
+      "statement_time": "14:00",
+      "presser_time": "14:30",
+      "presser_end_time": "15:30",
+      "sep": true,
+      "status": "scheduled",
+      "official_calendar_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    },
+    {
+      "event_id": "fomc-2027-01-27",
+      "decision_date": "2027-01-27",
+      "statement_time": "14:00",
+      "presser_time": "14:30",
+      "presser_end_time": "15:30",
+      "sep": false,
+      "status": "scheduled",
+      "official_calendar_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    }
+  ]
+}

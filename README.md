@@ -64,6 +64,30 @@ Collection is fail-closed: malformed or incomplete market topology never
 replaces the last valid public snapshot. GitHub Actions refreshes the site four
 times per day and deploys the static `site/` directory to GitHub Pages.
 
+### FOMC event-window collection
+
+Scheduled decision days also have a separate five-minute observation pipeline
+from 13:55 through 16:05 America/New_York. It archives all configured native
+meeting and year-end coordinates, books, spreads, liquidity, event activity,
+raw API evidence, client retrieval times, and lifecycle state to the isolated
+`event-data` branch. The regular six-hour forecast refresh remains unchanged.
+
+The phase labels (`pre_action`, `action_window`, `pre_presser`, `presser`, and
+`post_presser`) are clock windows, not causal identifications. The 14:00 policy
+action, statement, and any SEP arrive together. Client retrieval time is not an
+exchange quote timestamp, so exchange freshness stays explicitly unavailable
+when the API does not supply it. Closed-but-pending and resolved contracts are
+kept distinct so future-meeting repricing is not lost immediately after the
+decision.
+
+To inspect the strict gate without collecting or writing data:
+
+```sh
+PYTHONPATH=src python -m fed_forecast collect-fomc-event gate \
+  --run-created-at 2026-09-16T18:05:00Z \
+  --actual-start-at 2026-09-16T18:05:30Z
+```
+
 ## Repository map
 
 - `config/` — current market topology, model settings, and official decisions
