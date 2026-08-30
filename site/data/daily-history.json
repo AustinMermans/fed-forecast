@@ -1201,5 +1201,56 @@
       }
     ],
     "nfp": null
+  },
+  {
+    "curve": null,
+    "generated_at": "2026-08-30T21:17:52.539467Z",
+    "meetings": [
+      {
+        "date": "2026-09-16",
+        "expected_change_bp": 12.895529884480162,
+        "prices": {
+          "25 bps decrease": 0.0075339025615268704,
+          "25 bps increase": 0.5173279758915118,
+          "50+ bps decrease": 0.0025113008538422904,
+          "50+ bps increase": 0.0055248618784530384,
+          "No change": 0.467101958814666
+        }
+      },
+      {
+        "date": "2026-10-28",
+        "expected_change_bp": 5.189596499756927,
+        "prices": {
+          "25 bps decrease": 0.034516285853184246,
+          "25 bps increase": 0.25765678172095285,
+          "50+ bps decrease": 0.015070491006319884,
+          "50+ bps increase": 0.007292173067574137,
+          "No change": 0.6854642683519688
+        }
+      },
+      {
+        "date": "2026-12-09",
+        "expected_change_bp": 11.66424418604651,
+        "prices": {
+          "25 bps decrease": 0.04699612403100775,
+          "25 bps increase": 0.46996124031007747,
+          "50+ bps decrease": 0.01501937984496124,
+          "50+ bps increase": 0.036821705426356585,
+          "No change": 0.4312015503875969
+        }
+      },
+      {
+        "date": "2027-01-27",
+        "expected_change_bp": 0.6750241080038573,
+        "prices": {
+          "25 bps decrease": 0.1398264223722276,
+          "25 bps increase": 0.20732883317261333,
+          "50+ bps decrease": 0.04484088717454195,
+          "50+ bps increase": 0.02459016393442623,
+          "No change": 0.583413693346191
+        }
+      }
+    ],
+    "nfp": null
   }
 ]
