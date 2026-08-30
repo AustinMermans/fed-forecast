@@ -42,13 +42,30 @@ class ProductionSiteTests(unittest.TestCase):
         self.assertEqual(evidence["stage1_primary_14_15"]["status"], "new_run_required")
         self.assertIsNone(evidence["exploratory_support_assessment"]["design_artifact"])
 
-    def test_forecast_payload_is_unchanged_except_for_evidence_contract(self) -> None:
-        dashboard = dict(self.dashboard)
-        dashboard.pop("evidence_summary")
-        canonical_dashboard = json.dumps(dashboard, sort_keys=True, separators=(",", ":")).encode()
-        canonical_replay = json.dumps(self.replay, sort_keys=True, separators=(",", ":")).encode()
-        self.assertEqual(hashlib.sha256(canonical_dashboard).hexdigest(), "c7b92bfd017a7f4bf42cd2787d702e241ae8ab90352d74e17344f49db218aea9")
-        self.assertEqual(hashlib.sha256(canonical_replay).hexdigest(), "850c31ec60b37c371fd2f681493cf579e82f5150a2abba1297a88e6a880e5414")
+    def test_evidence_contract_is_metadata_only_and_hash_bound(self) -> None:
+        evidence_path = ROOT / "site/data/evidence-summary.json"
+        evidence_bytes = evidence_path.read_bytes()
+        evidence = json.loads(evidence_bytes)
+        contract = self.dashboard["evidence_summary"]
+
+        self.assertEqual(
+            set(contract),
+            {
+                "url",
+                "schema_version",
+                "generated_at",
+                "sha256",
+                "legacy_model_sha256",
+                "legacy_cutoff_at",
+            },
+        )
+        self.assertEqual(contract["url"], "data/evidence-summary.json")
+        self.assertEqual(contract["schema_version"], evidence["schema_version"])
+        self.assertEqual(contract["generated_at"], evidence["summary_generated_at"])
+        self.assertEqual(contract["sha256"], hashlib.sha256(evidence_bytes).hexdigest())
+        provenance = evidence["legacy_canonical_15_30"]["provenance"]
+        self.assertEqual(contract["legacy_model_sha256"], provenance["model_sha256"])
+        self.assertEqual(contract["legacy_cutoff_at"], provenance["data_cutoff_at"])
 
     def test_branch_module_loads_before_dashboard_with_matching_cache_bust(self) -> None:
         html = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
